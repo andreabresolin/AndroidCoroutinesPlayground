@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Android Coroutines Playground</string>
+
+    <string name="task_1">Task 1</string>
+    <string name="task_2">Task 2</string>
+    <string name="task_3">Task 3</string>
+
+    <string name="sequential">Sequential</string>
+    <string name="parallel">Parallel</string>
+    <string name="sequential_with_error">Sequential with error</string>
+    <string name="parallel_with_error">Parallel with error</string>
+    <string name="multiple">Multiple</string>
+    <string name="callback">Callback</string>
+
+    <string name="go_to_mvp_fragment">Go to MVP Fragment</string>
+    <string name="go_to_mvvm_fragment">Go to MVVM Fragment</string>
+
+    <string name="home_fragment_title">Home Fragment</string>
+    <string name="mvp_fragment_title">MVP Fragment</string>
+    <string name="mvvm_fragment_title">MVVM Fragment</string>
+</resources>

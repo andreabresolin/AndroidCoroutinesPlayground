@@ -1,0 +1,6 @@
+package andreabresolin.androidcoroutinesplayground.app.domain
+
+import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
+
+abstract class BaseUseCase
+constructor(appCoroutineScope: AppCoroutineScope) : AppCoroutineScope by appCoroutineScope

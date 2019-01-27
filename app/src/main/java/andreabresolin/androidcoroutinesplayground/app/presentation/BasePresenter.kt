@@ -1,0 +1,6 @@
+package andreabresolin.androidcoroutinesplayground.app.presentation
+
+import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
+
+abstract class BasePresenter
+constructor(appCoroutineScope: AppCoroutineScope) : AppCoroutineScope by appCoroutineScope

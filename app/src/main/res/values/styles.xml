@@ -1,0 +1,38 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="FragmentTitle">
+        <item name="android:textSize">@dimen/fragment_title_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TaskBox">
+        <item name="android:padding">@dimen/task_box_padding</item>
+        <item name="android:textSize">@dimen/fragment_title_text_size</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="TaskBoxInitialState" parent="TaskBox">
+        <item name="android:background">#eee</item>
+    </style>
+
+    <style name="TaskBoxRunningState" parent="TaskBox">
+        <item name="android:background">#ffca28</item>
+    </style>
+
+    <style name="TaskBoxCompletedState" parent="TaskBox">
+        <item name="android:background">#1de8b5</item>
+    </style>
+
+    <style name="TaskBoxErrorState" parent="TaskBox">
+        <item name="android:background">#ef5350</item>
+    </style>
+
+</resources>

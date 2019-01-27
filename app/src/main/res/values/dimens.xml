@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fragment_margin">32dp</dimen>
+
+    <dimen name="task_box_padding">8dp</dimen>
+    <dimen name="task_box_separation_margin">8dp</dimen>
+
+    <dimen name="items_vertical_spacing">16dp</dimen>
+
+    <dimen name="fragment_title_text_size">18sp</dimen>
+</resources>

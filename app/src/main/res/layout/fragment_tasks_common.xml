@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/fragment_margin"
+        tools:context=".mvvm.view.MVVMFragment">
+
+    <TextView
+            android:id="@+id/task1Box"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/fragmentTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/task2Box"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/task_1"
+            style="@style/TaskBoxInitialState"/>
+
+    <TextView
+            android:id="@+id/task2Box"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/task1Box"
+            app:layout_constraintStart_toEndOf="@id/task1Box"
+            app:layout_constraintEnd_toStartOf="@id/task3Box"
+            android:layout_marginStart="@dimen/task_box_separation_margin"
+            android:text="@string/task_2"
+            style="@style/TaskBoxInitialState"/>
+
+    <TextView
+            android:id="@+id/task3Box"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/task1Box"
+            app:layout_constraintStart_toEndOf="@id/task2Box"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginStart="@dimen/task_box_separation_margin"
+            android:text="@string/task_3"
+            style="@style/TaskBoxInitialState"/>
+
+    <Button android:id="@+id/runSequentialBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/task1Box"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/sequential"/>
+
+    <Button android:id="@+id/runParallelBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/runSequentialBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/parallel"/>
+
+    <Button android:id="@+id/runSequentialWithErrorBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/runParallelBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/sequential_with_error"/>
+
+    <Button android:id="@+id/runParallelWithErrorBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/runSequentialWithErrorBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/parallel_with_error"/>
+
+    <Button android:id="@+id/runMultipleBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/runParallelWithErrorBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/multiple"/>
+
+    <Button android:id="@+id/runCallbackBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/runMultipleBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/items_vertical_spacing"
+            android:text="@string/callback"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
