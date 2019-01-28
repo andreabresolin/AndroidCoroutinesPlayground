@@ -39,7 +39,7 @@ class MVPPresenterImpl
         }
     }
 
-    override fun runSequentialTasks() = uiTask {
+    override fun runSequentialTasks() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)
@@ -59,7 +59,7 @@ class MVPPresenterImpl
         view.updateTaskExecutionState(3, processTaskResult(task3Result))
     }
 
-    override fun runParallelTasks() = uiTask {
+    override fun runParallelTasks() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)
@@ -67,20 +67,20 @@ class MVPPresenterImpl
         delayTask(1000)
 
         view.updateTaskExecutionState(1, RUNNING)
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.execute(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
 
         view.updateTaskExecutionState(2, RUNNING)
-        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.execute(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(300, 200, 2000)
 
         view.updateTaskExecutionState(3, RUNNING)
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.execute(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
 
         view.updateTaskExecutionState(1, processTaskResult(task1Result.await()))
         view.updateTaskExecutionState(2, processTaskResult(task2Result.await()))
         view.updateTaskExecutionState(3, processTaskResult(task3Result.await()))
     }
 
-    override fun runSequentialTasksWithError() = uiTask {
+    override fun runSequentialTasksWithError() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)
@@ -100,7 +100,7 @@ class MVPPresenterImpl
         view.updateTaskExecutionState(3, processTaskResult(task3Result))
     }
 
-    override fun runParallelTasksWithError() = uiTask {
+    override fun runParallelTasksWithError() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)
@@ -108,20 +108,20 @@ class MVPPresenterImpl
         delayTask(1000)
 
         view.updateTaskExecutionState(1, RUNNING)
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.execute(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
 
         view.updateTaskExecutionState(2, RUNNING)
-        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.execute(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(300, 200, 2000)
 
         view.updateTaskExecutionState(3, RUNNING)
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.execute(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
 
         view.updateTaskExecutionState(1, processTaskResult(task1Result.await()))
         view.updateTaskExecutionState(2, processTaskResult(task2Result.await()))
         view.updateTaskExecutionState(3, processTaskResult(task3Result.await()))
     }
 
-    override fun runMultipleTasks() = uiTask {
+    override fun runMultipleTasks() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)
@@ -141,7 +141,7 @@ class MVPPresenterImpl
         view.updateTaskExecutionState(3, processTaskResult(task3Result))
     }
 
-    override fun runCallbackTasks() = uiTask {
+    override fun runCallbackTasksWithError() = uiCoroutine {
         view.updateTaskExecutionState(1, INITIAL)
         view.updateTaskExecutionState(2, INITIAL)
         view.updateTaskExecutionState(3, INITIAL)

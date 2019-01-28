@@ -40,7 +40,7 @@ constructor(
         }
     }
 
-    override fun runSequentialTasks() = uiTask {
+    override fun runSequentialTasks() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -60,7 +60,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runParallelTasks() = uiTask {
+    override fun runParallelTasks() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -68,20 +68,20 @@ constructor(
         delayTask(1000)
 
         task1State.value = RUNNING
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.execute(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
 
         task2State.value = RUNNING
-        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.execute(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(300, 200, 2000)
 
         task3State.value = RUNNING
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.execute(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
 
         task1State.value = processTaskResult(task1Result.await())
         task2State.value = processTaskResult(task2Result.await())
         task3State.value = processTaskResult(task3Result.await())
     }
 
-    override fun runSequentialTasksWithError() = uiTask {
+    override fun runSequentialTasksWithError() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -101,7 +101,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runParallelTasksWithError() = uiTask {
+    override fun runParallelTasksWithError() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -109,20 +109,20 @@ constructor(
         delayTask(1000)
 
         task1State.value = RUNNING
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.execute(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
 
         task2State.value = RUNNING
-        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.execute(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(300, 200, 2000)
 
         task3State.value = RUNNING
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.execute(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
 
         task1State.value = processTaskResult(task1Result.await())
         task2State.value = processTaskResult(task2Result.await())
         task3State.value = processTaskResult(task3Result.await())
     }
 
-    override fun runMultipleTasks() = uiTask {
+    override fun runMultipleTasks() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -142,7 +142,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runCallbackTasks() = uiTask {
+    override fun runCallbackTasksWithError() = uiCoroutine {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL

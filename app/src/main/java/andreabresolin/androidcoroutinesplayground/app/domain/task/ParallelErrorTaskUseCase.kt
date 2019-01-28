@@ -14,12 +14,12 @@ class ParallelErrorTaskUseCase
     appCoroutineScope: AppCoroutineScope
 ) : BaseUseCase(appCoroutineScope) {
 
-    fun execute(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = parallelTask {
+    fun executeAsync(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = backgroundTaskAsync {
         delayTask(startDelay)
 
         val taskDuration = Random.nextLong(minDuration, maxDuration + 1)
         delayTask(taskDuration)
 
-        return@parallelTask TaskExecutionError(CustomTaskException())
+        return@backgroundTaskAsync TaskExecutionError(CustomTaskException())
     }
 }

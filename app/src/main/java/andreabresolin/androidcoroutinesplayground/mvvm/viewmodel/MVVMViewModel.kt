@@ -23,5 +23,5 @@ constructor(appCoroutineScope: AppCoroutineScope) : BaseViewModel(appCoroutineSc
 
     abstract fun runMultipleTasks()
 
-    abstract fun runCallbackTasks()
+    abstract fun runCallbackTasksWithError()
 }

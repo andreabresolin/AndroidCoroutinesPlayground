@@ -15,7 +15,7 @@ class ParallelTaskUseCase
     private val remoteRepository: RemoteRepository
 ) : BaseUseCase(appCoroutineScope) {
 
-    fun execute(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = parallelTask {
+    fun executeAsync(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = backgroundTaskAsync {
         delayTask(startDelay)
 
         val taskDuration = Random.nextLong(minDuration, maxDuration + 1)
@@ -24,6 +24,6 @@ class ParallelTaskUseCase
 
         delayTask(taskDuration)
 
-        return@parallelTask TaskExecutionSuccess(fetchedData)
+        return@backgroundTaskAsync TaskExecutionSuccess(fetchedData)
     }
 }

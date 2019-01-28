@@ -39,19 +39,19 @@ abstract class BaseViewModelTest : BaseMockitoTest() {
     @Suppress("UNCHECKED_CAST")
     protected fun <T> trackLiveDataChanges(liveData: LiveData<T>) {
         liveData.observe({ testLifecycle }, { newState ->
-            var stateChanges: MutableList<T>? = liveDataChanges[liveData] as MutableList<T>?
+            var statesSequence: MutableList<T>? = liveDataChanges[liveData] as MutableList<T>?
 
-            if (stateChanges == null) {
-                stateChanges = mutableListOf()
-                liveDataChanges[liveData] = stateChanges
+            if (statesSequence == null) {
+                statesSequence = mutableListOf()
+                liveDataChanges[liveData] = statesSequence
             }
 
-            stateChanges.add(newState)
+            statesSequence.add(newState)
         })
     }
 
     @Suppress("UNCHECKED_CAST")
-    protected fun <T> assertThatLiveDataStateChangesAre(liveData: LiveData<T>, stateChanges: List<T>) {
-        assertThat(liveDataChanges[liveData] as List<T>?).isEqualTo(stateChanges)
+    protected fun <T> assertThatLiveDataStatesSequenceIs(liveData: LiveData<T>, statesSequence: List<T>) {
+        assertThat(liveDataChanges[liveData] as List<T>?).isEqualTo(statesSequence)
     }
 }

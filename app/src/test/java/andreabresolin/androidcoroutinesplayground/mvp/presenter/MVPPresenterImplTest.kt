@@ -139,11 +139,11 @@ class MVPPresenterImplTest : BaseMockitoTest() {
     }
 
     @Test
-    fun runCallbackTasks_runsCallbackTasksWithError() {
+    fun runCallbackTasksWithError_runsCallbackTasksWithError() {
         givenThatCallbackTaskWillReturn(mockCallbackTask1, TaskExecutionSuccess(10))
         givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionError(CustomTaskException()))
         givenThatCallbackTaskWillReturn(mockCallbackTask3, TaskExecutionError(CustomTaskException()))
-        whenRunCallbackTasks()
+        whenRunCallbackTasksWithError()
         thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
         thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, ERROR))
         thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, ERROR))
@@ -161,7 +161,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun givenThatParallelTaskWillReturn(parallelTask: ParallelTaskUseCase,
                                                 taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelTask.execute(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatSequentialErrorTaskWillReturn(sequentialErrorTask: SequentialErrorTaskUseCase,
@@ -171,7 +171,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun givenThatParallelErrorTaskWillReturn(parallelErrorTask: ParallelErrorTaskUseCase,
                                                      taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelErrorTask.execute(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelErrorTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatMultipleTasksWillReturn(multipleTasks: MultipleTasksUseCase,
@@ -208,8 +208,8 @@ class MVPPresenterImplTest : BaseMockitoTest() {
         subject.runMultipleTasks()
     }
 
-    private fun whenRunCallbackTasks() {
-        subject.runCallbackTasks()
+    private fun whenRunCallbackTasksWithError() {
+        subject.runCallbackTasksWithError()
     }
 
     // endregion When

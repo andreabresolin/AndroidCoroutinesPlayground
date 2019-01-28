@@ -38,7 +38,7 @@ class MVPFragment : BaseFragment(), MVPView {
         runSequentialWithErrorBtn.setOnClickListener { onRunSequentialWithErrorBtnClicked() }
         runParallelWithErrorBtn.setOnClickListener { onRunParallelWithErrorBtnClicked() }
         runMultipleBtn.setOnClickListener { onRunMultipleBtnClicked() }
-        runCallbackBtn.setOnClickListener { onRunCallbackBtnClicked() }
+        runCallbackWithErrorBtn.setOnClickListener { onRunCallbackWithErrorBtnClicked() }
     }
 
     private fun onRunSequentialBtnClicked() {
@@ -61,8 +61,8 @@ class MVPFragment : BaseFragment(), MVPView {
         presenter.runMultipleTasks()
     }
 
-    private fun onRunCallbackBtnClicked() {
-        presenter.runCallbackTasks()
+    private fun onRunCallbackWithErrorBtnClicked() {
+        presenter.runCallbackTasksWithError()
     }
 
     private fun applyTaskStyleForState(taskView: View, taskExecutionState: TaskExecutionState) {

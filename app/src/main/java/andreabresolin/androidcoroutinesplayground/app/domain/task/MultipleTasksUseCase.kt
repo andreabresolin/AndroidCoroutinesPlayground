@@ -19,7 +19,7 @@ class MultipleTasksUseCase
         delayTask(taskDuration)
 
         val fetchedData: Long = arrayOf(param1, param2, param3)
-            .map { parallelIOTask { remoteRepository.fetchData(it) } }
+            .map { ioTaskAsync { remoteRepository.fetchData(it) } }
             .map { it.await() }
             .map { ioTask { remoteRepository.fetchData(it) } }
             .sum()

@@ -46,7 +46,7 @@ class MVVMFragment : BaseFragment() {
         runSequentialWithErrorBtn.setOnClickListener { onRunSequentialWithErrorBtnClicked() }
         runParallelWithErrorBtn.setOnClickListener { onRunParallelWithErrorBtnClicked() }
         runMultipleBtn.setOnClickListener { onRunMultipleBtnClicked() }
-        runCallbackBtn.setOnClickListener { onRunCallbackBtnClicked() }
+        runCallbackWithErrorBtn.setOnClickListener { onRunCallbackWithErrorBtnClicked() }
     }
 
     private val task1StateObserver = Observer<TaskExecutionState> { newState -> applyTaskStyleForState(task1Box, newState) }
@@ -82,7 +82,7 @@ class MVVMFragment : BaseFragment() {
         viewModel.runMultipleTasks()
     }
 
-    private fun onRunCallbackBtnClicked() {
-        viewModel.runCallbackTasks()
+    private fun onRunCallbackWithErrorBtnClicked() {
+        viewModel.runCallbackTasksWithError()
     }
 }

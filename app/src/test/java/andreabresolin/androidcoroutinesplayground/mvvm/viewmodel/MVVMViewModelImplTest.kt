@@ -75,93 +75,93 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
 
     @Test
     fun runSequentialTasks_runsSequentialTasksWithoutError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatSequentialTaskWillReturn(mockSequentialTask1, TaskExecutionSuccess(10))
         givenThatSequentialTaskWillReturn(mockSequentialTask2, TaskExecutionSuccess(20))
         givenThatSequentialTaskWillReturn(mockSequentialTask3, TaskExecutionSuccess(30))
         whenRunSequentialTasks()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
     }
 
     @Test
     fun runParallelTasks_runsParallelTasksWithoutError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatParallelTaskWillReturn(mockParallelTask1, TaskExecutionSuccess(10))
         givenThatParallelTaskWillReturn(mockParallelTask2, TaskExecutionSuccess(20))
         givenThatParallelTaskWillReturn(mockParallelTask3, TaskExecutionSuccess(30))
         whenRunParallelTasks()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
     }
 
     @Test
     fun runSequentialTasksWithError_runsSequentialTasksWithError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatSequentialTaskWillReturn(mockSequentialTask1, TaskExecutionSuccess(10))
         givenThatSequentialErrorTaskWillReturn(mockSequentialErrorTask, TaskExecutionError(CustomTaskException()))
         givenThatSequentialTaskWillReturn(mockSequentialTask3, TaskExecutionSuccess(30))
         whenRunSequentialTasksWithError()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
     }
 
     @Test
     fun runParallelTasksWithError_runsParallelTasksWithError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatParallelTaskWillReturn(mockParallelTask1, TaskExecutionSuccess(10))
         givenThatParallelErrorTaskWillReturn(mockParallelErrorTask, TaskExecutionError(CustomTaskException()))
         givenThatParallelTaskWillReturn(mockParallelTask3, TaskExecutionSuccess(30))
         whenRunParallelTasksWithError()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
     }
 
     @Test
     fun runMultipleTasks_runsMultipleTasksWithoutError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatMultipleTasksWillReturn(mockMultipleTasks1, TaskExecutionSuccess(10))
         givenThatMultipleTasksWillReturn(mockMultipleTasks2, TaskExecutionSuccess(20))
         givenThatMultipleTasksWillReturn(mockMultipleTasks3, TaskExecutionSuccess(30))
         whenRunMultipleTasks()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
     }
 
     @Test
-    fun runCallbackTasks_runsCallbackTasksWithError() {
-        givenThatStateWillChange(subject.task1State)
-        givenThatStateWillChange(subject.task2State)
-        givenThatStateWillChange(subject.task3State)
+    fun runCallbackTasksWithError_runsCallbackTasksWithError() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
         givenThatCallbackTaskWillReturn(mockCallbackTask1, TaskExecutionSuccess(10))
         givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionError(CustomTaskException()))
         givenThatCallbackTaskWillReturn(mockCallbackTask3, TaskExecutionError(CustomTaskException()))
-        whenRunCallbackTasks()
-        thenTaskStateChangesAre(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(subject.task3State, listOf(INITIAL, RUNNING, ERROR))
+        whenRunCallbackTasksWithError()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, ERROR))
     }
 
     // endregion Test
 
     // region Given
 
-    private fun <T> givenThatStateWillChange(liveData: LiveData<T>) {
+    private fun <T> givenThatStateWillChangeFor(liveData: LiveData<T>) {
         trackLiveDataChanges(liveData)
     }
 
@@ -172,7 +172,7 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
 
     private fun givenThatParallelTaskWillReturn(parallelTask: ParallelTaskUseCase,
                                                 taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelTask.execute(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatSequentialErrorTaskWillReturn(sequentialErrorTask: SequentialErrorTaskUseCase,
@@ -182,7 +182,7 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
 
     private fun givenThatParallelErrorTaskWillReturn(parallelErrorTask: ParallelErrorTaskUseCase,
                                                      taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelErrorTask.execute(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelErrorTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatMultipleTasksWillReturn(multipleTasks: MultipleTasksUseCase,
@@ -219,16 +219,17 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         subject.runMultipleTasks()
     }
 
-    private fun whenRunCallbackTasks() {
-        subject.runCallbackTasks()
+    private fun whenRunCallbackTasksWithError() {
+        subject.runCallbackTasksWithError()
     }
 
     // endregion When
 
     // region Then
 
-    private fun thenTaskStateChangesAre(taskState: LiveData<TaskExecutionState>, states: List<TaskExecutionState>) {
-        assertThatLiveDataStateChangesAre(taskState, states)
+    private fun thenTaskStatesSequenceIs(taskState: LiveData<TaskExecutionState>,
+                                         statesSequence: List<TaskExecutionState>) {
+        assertThatLiveDataStatesSequenceIs(taskState, statesSequence)
     }
 
     // endregion Then

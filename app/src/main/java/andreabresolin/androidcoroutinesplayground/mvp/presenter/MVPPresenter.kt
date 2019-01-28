@@ -12,7 +12,7 @@ interface MVPPresenter {
 
     fun runMultipleTasks()
 
-    fun runCallbackTasks()
+    fun runCallbackTasksWithError()
 
     fun cancelAllTasks()
 }

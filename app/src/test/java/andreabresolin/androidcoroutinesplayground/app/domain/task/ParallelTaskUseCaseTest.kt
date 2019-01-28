@@ -32,9 +32,9 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
     // region Test
 
     @Test
-    fun execute_executesTask() {
+    fun executeAsync_executesTask() {
         givenFetchedDataIs(100)
-        whenExecuteWith(10, 20, 30)
+        whenExecuteAsyncWith(10, 20, 30)
         thenResultIs(TaskExecutionSuccess(100))
     }
 
@@ -50,8 +50,8 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
 
     // region When
 
-    private fun whenExecuteWith(startDelay: Long, minDuration: Long, maxDuration: Long) = runBlocking {
-        actualExecuteResult = subject.execute(startDelay, minDuration, maxDuration)
+    private fun whenExecuteAsyncWith(startDelay: Long, minDuration: Long, maxDuration: Long) = runBlocking {
+        actualExecuteResult = subject.executeAsync(startDelay, minDuration, maxDuration)
     }
 
     // endregion When

@@ -5,15 +5,23 @@ import kotlinx.coroutines.Deferred
 
 interface AppCoroutineScope : CoroutineScope {
 
-    fun uiTask(block: suspend CoroutineScope.() -> Unit)
+    fun uiCoroutine(block: suspend CoroutineScope.() -> Unit)
+
+    fun backgroundCoroutine(block: suspend CoroutineScope.() -> Unit)
+
+    fun ioCoroutine(block: suspend CoroutineScope.() -> Unit)
+
+    suspend fun <T> uiTask(block: suspend CoroutineScope.() -> T): T
 
     suspend fun <T> backgroundTask(block: suspend CoroutineScope.() -> T): T
 
     suspend fun <T> ioTask(block: suspend CoroutineScope.() -> T): T
 
-    fun <T> parallelTask(block: suspend CoroutineScope.() -> T): Deferred<T>
+    fun <T> uiTaskAsync(block: suspend CoroutineScope.() -> T): Deferred<T>
 
-    fun <T> parallelIOTask(block: suspend CoroutineScope.() -> T): Deferred<T>
+    fun <T> backgroundTaskAsync(block: suspend CoroutineScope.() -> T): Deferred<T>
+
+    fun <T> ioTaskAsync(block: suspend CoroutineScope.() -> T): Deferred<T>
 
     suspend fun delayTask(milliseconds: Long)
 
