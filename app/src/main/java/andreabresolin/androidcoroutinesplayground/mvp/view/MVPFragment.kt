@@ -28,7 +28,7 @@ class MVPFragment : BaseFragment(), MVPView {
     }
 
     override fun onStop() {
-        presenter.cancelAllTasks()
+        presenter.cancelAll()
         super.onStop()
     }
 
@@ -39,6 +39,10 @@ class MVPFragment : BaseFragment(), MVPView {
         runParallelWithErrorBtn.setOnClickListener { onRunParallelWithErrorBtnClicked() }
         runMultipleBtn.setOnClickListener { onRunMultipleBtnClicked() }
         runCallbackWithErrorBtn.setOnClickListener { onRunCallbackWithErrorBtnClicked() }
+        runLongComputationBtn.setOnClickListener { onRunLongComputationBtnClicked() }
+        cancelLongComputation1Btn.setOnClickListener { onCancelLongComputation1BtnClicked() }
+        cancelLongComputation2Btn.setOnClickListener { onCancelLongComputation2BtnClicked() }
+        cancelLongComputation3Btn.setOnClickListener { onCancelLongComputation3BtnClicked() }
     }
 
     private fun onRunSequentialBtnClicked() {
@@ -65,11 +69,28 @@ class MVPFragment : BaseFragment(), MVPView {
         presenter.runCallbackTasksWithError()
     }
 
+    private fun onRunLongComputationBtnClicked() {
+        presenter.runLongComputationTasks()
+    }
+
+    private fun onCancelLongComputation1BtnClicked() {
+        presenter.cancelLongComputationTask1()
+    }
+
+    private fun onCancelLongComputation2BtnClicked() {
+        presenter.cancelLongComputationTask2()
+    }
+
+    private fun onCancelLongComputation3BtnClicked() {
+        presenter.cancelLongComputationTask3()
+    }
+
     private fun applyTaskStyleForState(taskView: View, taskExecutionState: TaskExecutionState) {
         when (taskExecutionState) {
             TaskExecutionState.INITIAL -> taskView.style(R.style.TaskBoxInitialState)
             TaskExecutionState.RUNNING -> taskView.style(R.style.TaskBoxRunningState)
             TaskExecutionState.COMPLETED -> taskView.style(R.style.TaskBoxCompletedState)
+            TaskExecutionState.CANCELLED -> taskView.style(R.style.TaskBoxCancelledState)
             TaskExecutionState.ERROR -> taskView.style(R.style.TaskBoxErrorState)
         }
     }

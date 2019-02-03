@@ -14,16 +14,16 @@ class DefaultAppCoroutineScope
     override val coroutineContext: CoroutineContext
         get() = coroutineDispatcherProvider.main + job
 
-    override fun uiCoroutine(block: suspend CoroutineScope.() -> Unit) {
-        startCoroutine(coroutineDispatcherProvider.main, block)
+    override fun uiJob(block: suspend CoroutineScope.() -> Unit) {
+        startJob(coroutineDispatcherProvider.main, block)
     }
 
-    override fun backgroundCoroutine(block: suspend CoroutineScope.() -> Unit) {
-        startCoroutine(coroutineDispatcherProvider.background, block)
+    override fun backgroundJob(block: suspend CoroutineScope.() -> Unit) {
+        startJob(coroutineDispatcherProvider.background, block)
     }
 
-    override fun ioCoroutine(block: suspend CoroutineScope.() -> Unit) {
-        startCoroutine(coroutineDispatcherProvider.io, block)
+    override fun ioJob(block: suspend CoroutineScope.() -> Unit) {
+        startJob(coroutineDispatcherProvider.io, block)
     }
 
     override suspend fun <T> uiTask(block: suspend CoroutineScope.() -> T): T {
@@ -54,10 +54,10 @@ class DefaultAppCoroutineScope
         delay(milliseconds)
     }
 
-    override fun cancelAllTasks() = job.cancelChildren()
+    override fun cancelAll() = job.cancelChildren()
 
-    private fun startCoroutine(coroutineContext: CoroutineContext,
-                               block: suspend CoroutineScope.() -> Unit) {
+    private fun startJob(coroutineContext: CoroutineContext,
+                         block: suspend CoroutineScope.() -> Unit) {
         launch(coroutineContext) { block() }
     }
 

@@ -10,3 +10,11 @@ fun CoroutineScope.logStarted(methodName: String) {
 fun CoroutineScope.logCompleted(methodName: String) {
     Timber.d("[%s][%s] Completed", methodName, Thread.currentThread().name)
 }
+
+fun CoroutineScope.logCancelled(methodName: String) {
+    Timber.d("[%s][%s] Cancelled", methodName, Thread.currentThread().name)
+}
+
+fun CoroutineScope.logIteration(methodName: String, iterationNumber: Long) {
+    Timber.d("[%s][%s] Iteration %s", methodName, Thread.currentThread().name, iterationNumber.toString())
+}

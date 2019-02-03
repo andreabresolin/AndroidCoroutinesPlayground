@@ -22,7 +22,10 @@ class MVVMViewModelFactory
     private val multipleTasks3: MultipleTasksUseCase,
     private val callbackTask1: CallbackTaskUseCase,
     private val callbackTask2: CallbackTaskUseCase,
-    private val callbackTask3: CallbackTaskUseCase
+    private val callbackTask3: CallbackTaskUseCase,
+    private val longComputationTask1: LongComputationTaskUseCase,
+    private val longComputationTask2: LongComputationTaskUseCase,
+    private val longComputationTask3: LongComputationTaskUseCase
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -42,7 +45,10 @@ class MVVMViewModelFactory
             multipleTasks3,
             callbackTask1,
             callbackTask2,
-            callbackTask3
+            callbackTask3,
+            longComputationTask1,
+            longComputationTask2,
+            longComputationTask3
         ) as T
     }
 }

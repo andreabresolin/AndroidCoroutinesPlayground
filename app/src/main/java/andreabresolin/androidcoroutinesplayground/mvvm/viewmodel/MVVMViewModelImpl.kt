@@ -1,12 +1,10 @@
 package andreabresolin.androidcoroutinesplayground.mvvm.viewmodel
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
+import andreabresolin.androidcoroutinesplayground.app.coroutines.awaitOrReturn
 import andreabresolin.androidcoroutinesplayground.app.domain.task.*
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState
+import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Deferred
 
@@ -26,21 +24,29 @@ constructor(
     private val multipleTasks3: MultipleTasksUseCase,
     private val callbackTask1: CallbackTaskUseCase,
     private val callbackTask2: CallbackTaskUseCase,
-    private val callbackTask3: CallbackTaskUseCase
+    private val callbackTask3: CallbackTaskUseCase,
+    private val longComputationTask1: LongComputationTaskUseCase,
+    private val longComputationTask2: LongComputationTaskUseCase,
+    private val longComputationTask3: LongComputationTaskUseCase
 ) : MVVMViewModel(appCoroutineScope) {
 
     override val task1State = MutableLiveData<TaskExecutionState>()
     override val task2State = MutableLiveData<TaskExecutionState>()
     override val task3State = MutableLiveData<TaskExecutionState>()
 
+    private var longComputationTask1Deferred: Deferred<TaskExecutionResult>? = null
+    private var longComputationTask2Deferred: Deferred<TaskExecutionResult>? = null
+    private var longComputationTask3Deferred: Deferred<TaskExecutionResult>? = null
+
     private fun processTaskResult(taskExecutionResult: TaskExecutionResult): TaskExecutionState {
         return when (taskExecutionResult) {
             is TaskExecutionSuccess -> COMPLETED
+            is TaskExecutionCancelled -> CANCELLED
             is TaskExecutionError -> ERROR
         }
     }
 
-    override fun runSequentialTasks() = uiCoroutine {
+    override fun runSequentialTasks() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -60,7 +66,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runParallelTasks() = uiCoroutine {
+    override fun runParallelTasks() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -81,7 +87,7 @@ constructor(
         task3State.value = processTaskResult(task3Result.await())
     }
 
-    override fun runSequentialTasksWithError() = uiCoroutine {
+    override fun runSequentialTasksWithError() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -101,7 +107,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runParallelTasksWithError() = uiCoroutine {
+    override fun runParallelTasksWithError() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -122,7 +128,7 @@ constructor(
         task3State.value = processTaskResult(task3Result.await())
     }
 
-    override fun runMultipleTasks() = uiCoroutine {
+    override fun runMultipleTasks() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -142,7 +148,7 @@ constructor(
         task3State.value = processTaskResult(task3Result)
     }
 
-    override fun runCallbackTasksWithError() = uiCoroutine {
+    override fun runCallbackTasksWithError() = uiJob {
         task1State.value = INITIAL
         task2State.value = INITIAL
         task3State.value = INITIAL
@@ -160,5 +166,52 @@ constructor(
         task3State.value = RUNNING
         val task3Result: TaskExecutionResult = callbackTask3.execute("SUCCESS")
         task3State.value = processTaskResult(task3Result)
+    }
+
+    override fun runLongComputationTasks() {
+        uiJob {
+            task1State.value = INITIAL
+            delayTask(1000)
+            task1State.value = RUNNING
+
+            longComputationTask1Deferred = longComputationTask1.executeAsync(500, 10)
+            longComputationTask1Deferred?.let {
+                task1State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
+            }
+        }
+
+        uiJob {
+            task2State.value = INITIAL
+            delayTask(1000)
+            task2State.value = RUNNING
+
+            longComputationTask2Deferred = longComputationTask2.executeAsync(1000, 5)
+            longComputationTask2Deferred?.let {
+                task2State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
+            }
+        }
+
+        uiJob {
+            task3State.value = INITIAL
+            delayTask(1000)
+            task3State.value = RUNNING
+
+            longComputationTask3Deferred = longComputationTask3.executeAsync(300, 20)
+            longComputationTask3Deferred?.let {
+                task3State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
+            }
+        }
+    }
+
+    override fun cancelLongComputationTask1() {
+        longComputationTask1Deferred?.cancel()
+    }
+
+    override fun cancelLongComputationTask2() {
+        longComputationTask2Deferred?.cancel()
+    }
+
+    override fun cancelLongComputationTask3() {
+        longComputationTask3Deferred?.cancel()
     }
 }

@@ -14,5 +14,13 @@ interface MVPPresenter {
 
     fun runCallbackTasksWithError()
 
-    fun cancelAllTasks()
+    fun runLongComputationTasks()
+
+    fun cancelLongComputationTask1()
+
+    fun cancelLongComputationTask2()
+
+    fun cancelLongComputationTask3()
+
+    fun cancelAll()
 }

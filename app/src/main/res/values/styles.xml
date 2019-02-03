@@ -31,6 +31,10 @@
         <item name="android:background">#1de8b5</item>
     </style>
 
+    <style name="TaskBoxCancelledState" parent="TaskBox">
+        <item name="android:background">#7986cb</item>
+    </style>
+
     <style name="TaskBoxErrorState" parent="TaskBox">
         <item name="android:background">#ef5350</item>
     </style>

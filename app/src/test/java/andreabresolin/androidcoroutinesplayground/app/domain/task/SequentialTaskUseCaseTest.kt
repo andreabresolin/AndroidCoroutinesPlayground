@@ -24,7 +24,7 @@ class SequentialTaskUseCaseTest : BaseMockitoTest() {
     @Before
     fun before() {
         subject = SequentialTaskUseCase(
-            appCoroutineScope,
+            testAppCoroutineScope,
             mockRemoteRepository)
     }
 

@@ -1,14 +1,12 @@
-package andreabresolin.androidcoroutinesplayground.app.coroutines.defaut
+package andreabresolin.androidcoroutinesplayground.app.coroutines.testing
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
 import andreabresolin.androidcoroutinesplayground.app.coroutines.CoroutineDispatcherProvider
-import andreabresolin.androidcoroutinesplayground.app.util.logCompleted
-import andreabresolin.androidcoroutinesplayground.app.util.logStarted
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class LoggingAppCoroutineScope
+class TestAppCoroutineScope
 @Inject constructor(private val coroutineDispatcherProvider: CoroutineDispatcherProvider) : AppCoroutineScope {
 
     private val job: Job = Job()
@@ -53,49 +51,23 @@ class LoggingAppCoroutineScope
     }
 
     override suspend fun delayTask(milliseconds: Long) {
-        delay(milliseconds)
+        // Do nothing
     }
 
     override fun cancelAll() = job.cancelChildren()
 
-    private fun getCoroutineContextPrefix(coroutineContext: CoroutineContext): String {
-        return when (coroutineContext) {
-            coroutineDispatcherProvider.main -> "ui"
-            coroutineDispatcherProvider.background -> "background"
-            coroutineDispatcherProvider.io -> "io"
-            else -> ""
-        }
-    }
-
     private fun startJob(coroutineContext: CoroutineContext,
                          block: suspend CoroutineScope.() -> Unit) {
-        launch(coroutineContext) {
-            val methodName = getCoroutineContextPrefix(coroutineContext) + "Job"
-            logStarted(methodName)
-            block()
-            logCompleted(methodName)
-        }
+        launch(coroutineContext) { block() }
     }
 
     private suspend fun <T> startTask(coroutineContext: CoroutineContext,
                                       block: suspend CoroutineScope.() -> T): T {
-        return withContext(coroutineContext) {
-            val methodName = getCoroutineContextPrefix(coroutineContext) + "Task"
-            logStarted(methodName)
-            val result = block()
-            logCompleted(methodName)
-            return@withContext result
-        }
+        return withContext(coroutineContext) { block() }
     }
 
     private fun <T> startTaskAsync(coroutineContext: CoroutineContext,
                                    block: suspend CoroutineScope.() -> T): Deferred<T> {
-        return async(coroutineContext) {
-            val methodName = getCoroutineContextPrefix(coroutineContext) + "TaskAsync"
-            logStarted(methodName)
-            val result = block()
-            logCompleted(methodName)
-            return@async result
-        }
+        return async(coroutineContext) { block() }
     }
 }

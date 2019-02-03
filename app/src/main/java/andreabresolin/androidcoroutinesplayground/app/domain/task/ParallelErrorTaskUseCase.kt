@@ -1,7 +1,7 @@
 package andreabresolin.androidcoroutinesplayground.app.domain.task
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
+import andreabresolin.androidcoroutinesplayground.app.domain.BaseCoroutineUseCase
 import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskException
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
@@ -12,7 +12,7 @@ import kotlin.random.Random
 class ParallelErrorTaskUseCase
 @Inject constructor(
     appCoroutineScope: AppCoroutineScope
-) : BaseUseCase(appCoroutineScope) {
+) : BaseCoroutineUseCase(appCoroutineScope) {
 
     fun executeAsync(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = backgroundTaskAsync {
         delayTask(startDelay)

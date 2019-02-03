@@ -5,3 +5,4 @@ import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskExcept
 sealed class TaskExecutionResult
 data class TaskExecutionSuccess(val result: Long) : TaskExecutionResult()
 data class TaskExecutionError(val exception: CustomTaskException) : TaskExecutionResult()
+object TaskExecutionCancelled : TaskExecutionResult()

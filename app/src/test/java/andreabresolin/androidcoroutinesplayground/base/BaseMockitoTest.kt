@@ -1,12 +1,14 @@
 package andreabresolin.androidcoroutinesplayground.base
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.test.TestAppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.coroutines.test.TestCoroutineDispatcherProvider
+import andreabresolin.androidcoroutinesplayground.app.coroutines.testing.TestAppCoroutineScope
+import andreabresolin.androidcoroutinesplayground.app.coroutines.testing.TestCoroutineDispatcherProvider
 import org.junit.runner.RunWith
+import org.mockito.Spy
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
 abstract class BaseMockitoTest {
 
-    protected val appCoroutineScope = TestAppCoroutineScope(TestCoroutineDispatcherProvider())
+    @Spy
+    protected val testAppCoroutineScope = TestAppCoroutineScope(TestCoroutineDispatcherProvider())
 }

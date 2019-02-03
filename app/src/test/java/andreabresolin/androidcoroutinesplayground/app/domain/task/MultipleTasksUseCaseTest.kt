@@ -8,7 +8,6 @@ import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 
@@ -24,7 +23,7 @@ class MultipleTasksUseCaseTest : BaseMockitoTest() {
     @Before
     fun before() {
         subject = MultipleTasksUseCase(
-            appCoroutineScope,
+            testAppCoroutineScope,
             mockRemoteRepository)
     }
 

@@ -9,13 +9,14 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.base.BaseViewModelTest
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.BDDMockito.anyLong
-import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.*
 import org.mockito.Mock
 
 class MVVMViewModelImplTest : BaseViewModelTest() {
@@ -48,13 +49,25 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     private lateinit var mockCallbackTask2: CallbackTaskUseCase
     @Mock
     private lateinit var mockCallbackTask3: CallbackTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask1: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask2: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask3: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask1Deferred: Deferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockLongComputationTask2Deferred: Deferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockLongComputationTask3Deferred: Deferred<TaskExecutionResult>
 
     private lateinit var subject: MVVMViewModelImpl
 
     @Before
     fun before() {
         subject = MVVMViewModelImpl(
-            appCoroutineScope,
+            testAppCoroutineScope,
             mockSequentialTask1,
             mockSequentialTask2,
             mockSequentialTask3,
@@ -68,7 +81,10 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
             mockMultipleTasks3,
             mockCallbackTask1,
             mockCallbackTask2,
-            mockCallbackTask3)
+            mockCallbackTask3,
+            mockLongComputationTask1,
+            mockLongComputationTask2,
+            mockLongComputationTask3)
     }
 
     // region Test
@@ -157,6 +173,38 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, ERROR))
     }
 
+    @Test
+    fun runLongComputationTasks_runsLongComputationTasksWithoutError() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatLongComputationTask1WillReturn(TaskExecutionSuccess(10))
+        givenThatLongComputationTask2WillReturn(TaskExecutionSuccess(20))
+        givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
+        whenRunLongComputationTasks()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenWaitForCompletionOfLongComputationTasks()
+    }
+
+    @Test
+    fun cancelLongComputationTask2_cancelsLongComputationTask2BeforeCompletion() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatLongComputationTask1WillReturn(TaskExecutionSuccess(10))
+        givenThatLongComputationTask2WillBeCancelled()
+        givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
+        givenThatRunLongComputationTasksHasBeenCalled()
+        whenCancelLongComputationTask2()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenWaitForCompletionOfLongComputationTasks()
+        thenTaskIsCancelled(mockLongComputationTask2Deferred)
+    }
+
     // endregion Test
 
     // region Given
@@ -195,6 +243,39 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         given(callbackTask.execute(anyString())).willReturn(taskExecutionResult)
     }
 
+    private fun givenThatLongComputationTaskWillReturn(longComputationTask: LongComputationTaskUseCase,
+                                                       taskExecutionDeferred: Deferred<TaskExecutionResult>,
+                                                       taskExecutionResult: TaskExecutionResult) = runBlocking {
+        given(taskExecutionDeferred.await()).willReturn(taskExecutionResult)
+        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+    }
+
+    private fun givenThatLongComputationTask1WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask1, mockLongComputationTask1Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTask2WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask2, mockLongComputationTask2Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTask3WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask3, mockLongComputationTask3Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTaskWillBeCancelled(longComputationTask: LongComputationTaskUseCase,
+                                                            taskExecutionDeferred: Deferred<TaskExecutionResult>) = runBlocking {
+        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+        given(taskExecutionDeferred.await()).willThrow(CancellationException())
+    }
+
+    private fun givenThatLongComputationTask2WillBeCancelled() = runBlocking {
+        givenThatLongComputationTaskWillBeCancelled(mockLongComputationTask2, mockLongComputationTask2Deferred)
+    }
+
+    private fun givenThatRunLongComputationTasksHasBeenCalled() {
+        whenRunLongComputationTasks()
+    }
+
     // endregion Given
 
     // region When
@@ -223,6 +304,14 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         subject.runCallbackTasksWithError()
     }
 
+    private fun whenRunLongComputationTasks() {
+        subject.runLongComputationTasks()
+    }
+
+    private fun whenCancelLongComputationTask2() {
+        subject.cancelLongComputationTask2()
+    }
+
     // endregion When
 
     // region Then
@@ -230,6 +319,16 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     private fun thenTaskStatesSequenceIs(taskState: LiveData<TaskExecutionState>,
                                          statesSequence: List<TaskExecutionState>) {
         assertThatLiveDataStatesSequenceIs(taskState, statesSequence)
+    }
+
+    private fun thenWaitForCompletionOfLongComputationTasks() = runBlocking {
+        then(mockLongComputationTask1Deferred).should().await()
+        then(mockLongComputationTask2Deferred).should().await()
+        then(mockLongComputationTask3Deferred).should().await()
+    }
+
+    private fun thenTaskIsCancelled(taskDeferred: Deferred<TaskExecutionResult>) {
+        then(taskDeferred).should().cancel()
     }
 
     // endregion Then

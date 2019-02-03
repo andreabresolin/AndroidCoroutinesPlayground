@@ -4,7 +4,6 @@ import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineSco
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState
 import andreabresolin.androidcoroutinesplayground.app.presentation.BaseViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 
 abstract class MVVMViewModel
 constructor(appCoroutineScope: AppCoroutineScope) : BaseViewModel(appCoroutineScope) {
@@ -24,4 +23,12 @@ constructor(appCoroutineScope: AppCoroutineScope) : BaseViewModel(appCoroutineSc
     abstract fun runMultipleTasks()
 
     abstract fun runCallbackTasksWithError()
+
+    abstract fun runLongComputationTasks()
+
+    abstract fun cancelLongComputationTask1()
+
+    abstract fun cancelLongComputationTask2()
+
+    abstract fun cancelLongComputationTask3()
 }

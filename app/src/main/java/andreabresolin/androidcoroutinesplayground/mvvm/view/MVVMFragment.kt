@@ -47,6 +47,10 @@ class MVVMFragment : BaseFragment() {
         runParallelWithErrorBtn.setOnClickListener { onRunParallelWithErrorBtnClicked() }
         runMultipleBtn.setOnClickListener { onRunMultipleBtnClicked() }
         runCallbackWithErrorBtn.setOnClickListener { onRunCallbackWithErrorBtnClicked() }
+        runLongComputationBtn.setOnClickListener { onRunLongComputationBtnClicked() }
+        cancelLongComputation1Btn.setOnClickListener { onCancelLongComputation1BtnClicked() }
+        cancelLongComputation2Btn.setOnClickListener { onCancelLongComputation2BtnClicked() }
+        cancelLongComputation3Btn.setOnClickListener { onCancelLongComputation3BtnClicked() }
     }
 
     private val task1StateObserver = Observer<TaskExecutionState> { newState -> applyTaskStyleForState(task1Box, newState) }
@@ -58,6 +62,7 @@ class MVVMFragment : BaseFragment() {
             TaskExecutionState.INITIAL -> taskView.style(R.style.TaskBoxInitialState)
             TaskExecutionState.RUNNING -> taskView.style(R.style.TaskBoxRunningState)
             TaskExecutionState.COMPLETED -> taskView.style(R.style.TaskBoxCompletedState)
+            TaskExecutionState.CANCELLED -> taskView.style(R.style.TaskBoxCancelledState)
             TaskExecutionState.ERROR -> taskView.style(R.style.TaskBoxErrorState)
         }
     }
@@ -84,5 +89,21 @@ class MVVMFragment : BaseFragment() {
 
     private fun onRunCallbackWithErrorBtnClicked() {
         viewModel.runCallbackTasksWithError()
+    }
+
+    private fun onRunLongComputationBtnClicked() {
+        viewModel.runLongComputationTasks()
+    }
+
+    private fun onCancelLongComputation1BtnClicked() {
+        viewModel.cancelLongComputationTask1()
+    }
+
+    private fun onCancelLongComputation2BtnClicked() {
+        viewModel.cancelLongComputationTask2()
+    }
+
+    private fun onCancelLongComputation3BtnClicked() {
+        viewModel.cancelLongComputationTask3()
     }
 }

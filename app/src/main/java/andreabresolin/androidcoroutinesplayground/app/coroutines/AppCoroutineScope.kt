@@ -5,11 +5,11 @@ import kotlinx.coroutines.Deferred
 
 interface AppCoroutineScope : CoroutineScope {
 
-    fun uiCoroutine(block: suspend CoroutineScope.() -> Unit)
+    fun uiJob(block: suspend CoroutineScope.() -> Unit)
 
-    fun backgroundCoroutine(block: suspend CoroutineScope.() -> Unit)
+    fun backgroundJob(block: suspend CoroutineScope.() -> Unit)
 
-    fun ioCoroutine(block: suspend CoroutineScope.() -> Unit)
+    fun ioJob(block: suspend CoroutineScope.() -> Unit)
 
     suspend fun <T> uiTask(block: suspend CoroutineScope.() -> T): T
 
@@ -25,5 +25,5 @@ interface AppCoroutineScope : CoroutineScope {
 
     suspend fun delayTask(milliseconds: Long)
 
-    fun cancelAllTasks()
+    fun cancelAll()
 }

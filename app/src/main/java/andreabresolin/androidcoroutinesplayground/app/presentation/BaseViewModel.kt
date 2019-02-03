@@ -7,7 +7,7 @@ abstract class BaseViewModel
 constructor(appCoroutineScope: AppCoroutineScope) : ViewModel(), AppCoroutineScope by appCoroutineScope {
 
     override fun onCleared() {
-        cancelAllTasks()
+        cancelAll()
         super.onCleared()
     }
 }

@@ -17,7 +17,7 @@ class CallbackTaskUseCaseTest : BaseMockitoTest() {
 
     @Before
     fun before() {
-        subject = CallbackTaskUseCase(appCoroutineScope)
+        subject = CallbackTaskUseCase(testAppCoroutineScope)
     }
 
     // region Test

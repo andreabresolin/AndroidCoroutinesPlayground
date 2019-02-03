@@ -25,7 +25,7 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
     @Before
     fun before() {
         subject = ParallelTaskUseCase(
-            appCoroutineScope,
+            testAppCoroutineScope,
             mockRemoteRepository)
     }
 

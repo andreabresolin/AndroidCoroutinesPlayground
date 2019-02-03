@@ -1,7 +1,7 @@
 package andreabresolin.androidcoroutinesplayground.app.domain.task
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
+import andreabresolin.androidcoroutinesplayground.app.domain.BaseCoroutineUseCase
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.repository.RemoteRepository
@@ -13,7 +13,7 @@ class ParallelTaskUseCase
 @Inject constructor(
     appCoroutineScope: AppCoroutineScope,
     private val remoteRepository: RemoteRepository
-) : BaseUseCase(appCoroutineScope) {
+) : BaseCoroutineUseCase(appCoroutineScope) {
 
     fun executeAsync(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = backgroundTaskAsync {
         delayTask(startDelay)

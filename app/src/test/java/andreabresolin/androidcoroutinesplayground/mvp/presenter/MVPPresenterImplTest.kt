@@ -9,7 +9,9 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.base.BaseMockitoTest
 import andreabresolin.androidcoroutinesplayground.mvp.view.MVPView
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -52,13 +54,25 @@ class MVPPresenterImplTest : BaseMockitoTest() {
     private lateinit var mockCallbackTask2: CallbackTaskUseCase
     @Mock
     private lateinit var mockCallbackTask3: CallbackTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask1: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask2: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask3: LongComputationTaskUseCase
+    @Mock
+    private lateinit var mockLongComputationTask1Deferred: Deferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockLongComputationTask2Deferred: Deferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockLongComputationTask3Deferred: Deferred<TaskExecutionResult>
 
     private lateinit var subject: MVPPresenterImpl
 
     @Before
     fun before() {
         subject = MVPPresenterImpl(
-            appCoroutineScope,
+            testAppCoroutineScope,
             mockView,
             mockSequentialTask1,
             mockSequentialTask2,
@@ -73,7 +87,10 @@ class MVPPresenterImplTest : BaseMockitoTest() {
             mockMultipleTasks3,
             mockCallbackTask1,
             mockCallbackTask2,
-            mockCallbackTask3)
+            mockCallbackTask3,
+            mockLongComputationTask1,
+            mockLongComputationTask2,
+            mockLongComputationTask3)
     }
 
     // region Test
@@ -150,6 +167,32 @@ class MVPPresenterImplTest : BaseMockitoTest() {
         thenNoMoreInteractionsWithView()
     }
 
+    @Test
+    fun runLongComputationTasks_runsLongComputationTasksWithoutError() {
+        givenThatLongComputationTask1WillReturn(TaskExecutionSuccess(10))
+        givenThatLongComputationTask2WillReturn(TaskExecutionSuccess(20))
+        givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
+        whenRunLongComputationTasks()
+        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenWaitForCompletionOfLongComputationTasks()
+    }
+
+    @Test
+    fun cancelLongComputationTask2_cancelsLongComputationTask2BeforeCompletion() {
+        givenThatLongComputationTask1WillReturn(TaskExecutionSuccess(10))
+        givenThatLongComputationTask2WillBeCancelled()
+        givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
+        givenThatRunLongComputationTasksHasBeenCalled()
+        whenCancelLongComputationTask2()
+        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenWaitForCompletionOfLongComputationTasks()
+        thenTaskIsCancelled(mockLongComputationTask2Deferred)
+    }
+
     // endregion Test
 
     // region Given
@@ -184,6 +227,39 @@ class MVPPresenterImplTest : BaseMockitoTest() {
         given(callbackTask.execute(anyString())).willReturn(taskExecutionResult)
     }
 
+    private fun givenThatLongComputationTaskWillReturn(longComputationTask: LongComputationTaskUseCase,
+                                                       taskExecutionDeferred: Deferred<TaskExecutionResult>,
+                                                       taskExecutionResult: TaskExecutionResult) = runBlocking {
+        given(taskExecutionDeferred.await()).willReturn(taskExecutionResult)
+        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+    }
+
+    private fun givenThatLongComputationTask1WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask1, mockLongComputationTask1Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTask2WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask2, mockLongComputationTask2Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTask3WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatLongComputationTaskWillReturn(mockLongComputationTask3, mockLongComputationTask3Deferred, taskExecutionResult)
+    }
+
+    private fun givenThatLongComputationTaskWillBeCancelled(longComputationTask: LongComputationTaskUseCase,
+                                                            taskExecutionDeferred: Deferred<TaskExecutionResult>) = runBlocking {
+        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+        given(taskExecutionDeferred.await()).willThrow(CancellationException())
+    }
+
+    private fun givenThatLongComputationTask2WillBeCancelled() = runBlocking {
+        givenThatLongComputationTaskWillBeCancelled(mockLongComputationTask2, mockLongComputationTask2Deferred)
+    }
+
+    private fun givenThatRunLongComputationTasksHasBeenCalled() {
+        whenRunLongComputationTasks()
+    }
+
     // endregion Given
 
     // region When
@@ -212,6 +288,14 @@ class MVPPresenterImplTest : BaseMockitoTest() {
         subject.runCallbackTasksWithError()
     }
 
+    private fun whenRunLongComputationTasks() {
+        subject.runLongComputationTasks()
+    }
+
+    private fun whenCancelLongComputationTask2() {
+        subject.cancelLongComputationTask2()
+    }
+
     // endregion When
 
     // region Then
@@ -226,6 +310,16 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun thenNoMoreInteractionsWithView() {
         then(mockView).shouldHaveNoMoreInteractions()
+    }
+
+    private fun thenWaitForCompletionOfLongComputationTasks() = runBlocking {
+        then(mockLongComputationTask1Deferred).should().await()
+        then(mockLongComputationTask2Deferred).should().await()
+        then(mockLongComputationTask3Deferred).should().await()
+    }
+
+    private fun thenTaskIsCancelled(taskDeferred: Deferred<TaskExecutionResult>) {
+        then(taskDeferred).should().cancel()
     }
 
     // endregion Then
