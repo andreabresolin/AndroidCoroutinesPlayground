@@ -1,13 +1,14 @@
 package andreabresolin.androidcoroutinesplayground.app.presentation
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelChildren
 
 abstract class BaseViewModel
-constructor(appCoroutineScope: AppCoroutineScope) : ViewModel(), AppCoroutineScope by appCoroutineScope {
+constructor(private val coroutineScope: CoroutineScope) : ViewModel(), CoroutineScope by coroutineScope {
 
     override fun onCleared() {
-        cancelAll()
+        coroutineScope.coroutineContext.cancelChildren()
         super.onCleared()
     }
 }

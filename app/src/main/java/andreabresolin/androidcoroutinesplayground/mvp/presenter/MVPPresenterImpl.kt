@@ -1,13 +1,13 @@
 package andreabresolin.androidcoroutinesplayground.mvp.presenter
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.coroutines.awaitOrReturn
+import andreabresolin.androidcoroutinesplayground.app.coroutines.*
 import andreabresolin.androidcoroutinesplayground.app.domain.task.*
 import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.presentation.BasePresenter
 import andreabresolin.androidcoroutinesplayground.mvp.view.MVPView
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.TimeoutCancellationException
 import javax.inject.Inject
 
 class MVPPresenterImpl
@@ -73,13 +73,13 @@ class MVPPresenterImpl
         delayTask(1000)
 
         view.updateTaskExecutionState(1, RUNNING)
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(this, 100, 500, 1500)
 
         view.updateTaskExecutionState(2, RUNNING)
-        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(this, 300, 200, 2000)
 
         view.updateTaskExecutionState(3, RUNNING)
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(this, 200, 600, 1800)
 
         view.updateTaskExecutionState(1, processTaskResult(task1Result.await()))
         view.updateTaskExecutionState(2, processTaskResult(task2Result.await()))
@@ -114,13 +114,13 @@ class MVPPresenterImpl
         delayTask(1000)
 
         view.updateTaskExecutionState(1, RUNNING)
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(this, 100, 500, 1500)
 
         view.updateTaskExecutionState(2, RUNNING)
-        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(this, 300, 200, 2000)
 
         view.updateTaskExecutionState(3, RUNNING)
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(this, 200, 600, 1800)
 
         view.updateTaskExecutionState(1, processTaskResult(task1Result.await()))
         view.updateTaskExecutionState(2, processTaskResult(task2Result.await()))
@@ -173,7 +173,7 @@ class MVPPresenterImpl
             delayTask(1000)
             view.updateTaskExecutionState(1, RUNNING)
 
-            longComputationTask1Deferred = longComputationTask1.executeAsync(500, 10)
+            longComputationTask1Deferred = longComputationTask1.executeAsync(this, 500, 10)
             longComputationTask1Deferred?.let {
                 view.updateTaskExecutionState(1, processTaskResult(it.awaitOrReturn(TaskExecutionCancelled)))
             }
@@ -184,7 +184,7 @@ class MVPPresenterImpl
             delayTask(1000)
             view.updateTaskExecutionState(2, RUNNING)
 
-            longComputationTask2Deferred = longComputationTask2.executeAsync(1000, 5)
+            longComputationTask2Deferred = longComputationTask2.executeAsync(this, 1000, 5)
             longComputationTask2Deferred?.let {
                 view.updateTaskExecutionState(2, processTaskResult(it.awaitOrReturn(TaskExecutionCancelled)))
             }
@@ -195,7 +195,7 @@ class MVPPresenterImpl
             delayTask(1000)
             view.updateTaskExecutionState(3, RUNNING)
 
-            longComputationTask3Deferred = longComputationTask3.executeAsync(300, 20)
+            longComputationTask3Deferred = longComputationTask3.executeAsync(this, 300, 20)
             longComputationTask3Deferred?.let {
                 view.updateTaskExecutionState(3, processTaskResult(it.awaitOrReturn(TaskExecutionCancelled)))
             }
@@ -212,5 +212,40 @@ class MVPPresenterImpl
 
     override fun cancelLongComputationTask3() {
         longComputationTask3Deferred?.cancel()
+    }
+
+    override fun runLongComputationTasksWithTimeout() {
+        uiJob {
+            view.updateTaskExecutionState(1, INITIAL)
+            delayTask(1000)
+            view.updateTaskExecutionState(1, RUNNING)
+
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 6000)
+            view.updateTaskExecutionState(1, processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled)))
+        }
+
+        uiJob {
+            view.updateTaskExecutionState(2, INITIAL)
+            delayTask(1000)
+            view.updateTaskExecutionState(2, RUNNING)
+
+            try {
+                uiTask(timeout = 3000) {
+                    val taskResult: Deferred<TaskExecutionResult> = longComputationTask2.executeAsync(this, 1000, 5)
+                    view.updateTaskExecutionState(2, processTaskResult(taskResult.await()))
+                }
+            } catch (e: TimeoutCancellationException) {
+                view.updateTaskExecutionState(2, processTaskResult(TaskExecutionCancelled))
+            }
+        }
+
+        uiJob {
+            view.updateTaskExecutionState(3, INITIAL)
+            delayTask(1000)
+            view.updateTaskExecutionState(3, RUNNING)
+
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20, 2000)
+            view.updateTaskExecutionState(3, processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled)))
+        }
     }
 }

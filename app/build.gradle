@@ -36,19 +36,11 @@ ext {
     paris_version = '1.2.1'
     timber_version = '4.7.1'
     junit_version = '4.12'
-    mockito_version = '2.23.4'
+    mockito_version = '2.24.0'
     assertj_version = '3.11.1'
     architecture_core_testing_version = '1.1.0'
     test_runner_version = '1.1.1'
     espresso_core_version = '3.1.1'
-}
-
-configurations.all {
-    resolutionStrategy.eachDependency { details ->
-        if (details.requested.group == 'net.bytebuddy') {
-            details.useVersion '1.8.22'
-        }
-    }
 }
 
 dependencies {
@@ -94,6 +86,7 @@ dependencies {
     // Mockito
     testImplementation "org.mockito:mockito-core:$mockito_version"
     testImplementation "org.mockito:mockito-inline:$mockito_version"
+    androidTestImplementation "org.mockito:mockito-android:$mockito_version"
 
     // AssertJ
     testImplementation "org.assertj:assertj-core:$assertj_version"

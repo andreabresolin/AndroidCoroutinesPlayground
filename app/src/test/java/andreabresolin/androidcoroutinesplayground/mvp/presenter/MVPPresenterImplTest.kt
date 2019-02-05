@@ -7,12 +7,10 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
-import andreabresolin.androidcoroutinesplayground.base.BaseMockitoTest
 import andreabresolin.androidcoroutinesplayground.mvp.view.MVPView
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.runBlocking
+import andreabresolin.androidcoroutinesplayground.testing.BasePresenterTest
+import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.anyObj
+import kotlinx.coroutines.*
 import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyLong
@@ -22,7 +20,7 @@ import org.mockito.BDDMockito.then
 import org.mockito.Mock
 import org.mockito.Mockito.inOrder
 
-class MVPPresenterImplTest : BaseMockitoTest() {
+class MVPPresenterImplTest : BasePresenterTest() {
 
     @Mock
     private lateinit var mockView: MVPView
@@ -204,7 +202,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun givenThatParallelTaskWillReturn(parallelTask: ParallelTaskUseCase,
                                                 taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatSequentialErrorTaskWillReturn(sequentialErrorTask: SequentialErrorTaskUseCase,
@@ -214,7 +212,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun givenThatParallelErrorTaskWillReturn(parallelErrorTask: ParallelErrorTaskUseCase,
                                                      taskExecutionResult: TaskExecutionResult) = runBlocking {
-        given(parallelErrorTask.executeAsync(anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
+        given(parallelErrorTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(CompletableDeferred(taskExecutionResult))
     }
 
     private fun givenThatMultipleTasksWillReturn(multipleTasks: MultipleTasksUseCase,
@@ -231,7 +229,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
                                                        taskExecutionDeferred: Deferred<TaskExecutionResult>,
                                                        taskExecutionResult: TaskExecutionResult) = runBlocking {
         given(taskExecutionDeferred.await()).willReturn(taskExecutionResult)
-        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+        given(longComputationTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(taskExecutionDeferred)
     }
 
     private fun givenThatLongComputationTask1WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
@@ -248,7 +246,7 @@ class MVPPresenterImplTest : BaseMockitoTest() {
 
     private fun givenThatLongComputationTaskWillBeCancelled(longComputationTask: LongComputationTaskUseCase,
                                                             taskExecutionDeferred: Deferred<TaskExecutionResult>) = runBlocking {
-        given(longComputationTask.executeAsync(anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+        given(longComputationTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(taskExecutionDeferred)
         given(taskExecutionDeferred.await()).willThrow(CancellationException())
     }
 

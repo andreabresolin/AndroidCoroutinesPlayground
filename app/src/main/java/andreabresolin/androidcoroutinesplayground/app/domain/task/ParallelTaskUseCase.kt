@@ -1,21 +1,28 @@
 package andreabresolin.androidcoroutinesplayground.app.domain.task
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.domain.BaseCoroutineUseCase
+import andreabresolin.androidcoroutinesplayground.app.coroutines.backgroundTaskAsync
+import andreabresolin.androidcoroutinesplayground.app.coroutines.delayTask
+import andreabresolin.androidcoroutinesplayground.app.coroutines.ioTask
+import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.repository.RemoteRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import javax.inject.Inject
 import kotlin.random.Random
 
 class ParallelTaskUseCase
 @Inject constructor(
-    appCoroutineScope: AppCoroutineScope,
     private val remoteRepository: RemoteRepository
-) : BaseCoroutineUseCase(appCoroutineScope) {
+) : BaseUseCase() {
 
-    fun executeAsync(startDelay: Long, minDuration: Long, maxDuration: Long): Deferred<TaskExecutionResult> = backgroundTaskAsync {
+    fun executeAsync(
+        coroutineScope: CoroutineScope,
+        startDelay: Long,
+        minDuration: Long,
+        maxDuration: Long
+    ): Deferred<TaskExecutionResult> = coroutineScope.backgroundTaskAsync {
         delayTask(startDelay)
 
         val taskDuration = Random.nextLong(minDuration, maxDuration + 1)

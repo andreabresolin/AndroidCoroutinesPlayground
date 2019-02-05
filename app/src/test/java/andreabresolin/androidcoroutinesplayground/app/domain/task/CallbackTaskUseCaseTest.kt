@@ -3,7 +3,7 @@ package andreabresolin.androidcoroutinesplayground.app.domain.task
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
-import andreabresolin.androidcoroutinesplayground.base.BaseMockitoTest
+import andreabresolin.androidcoroutinesplayground.testing.BaseMockitoTest
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -17,7 +17,7 @@ class CallbackTaskUseCaseTest : BaseMockitoTest() {
 
     @Before
     fun before() {
-        subject = CallbackTaskUseCase(testAppCoroutineScope)
+        subject = CallbackTaskUseCase()
     }
 
     // region Test

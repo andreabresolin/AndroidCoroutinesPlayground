@@ -1,7 +1,8 @@
 package andreabresolin.androidcoroutinesplayground.app.domain.task
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.domain.BaseCoroutineUseCase
+import andreabresolin.androidcoroutinesplayground.app.coroutines.backgroundTask
+import andreabresolin.androidcoroutinesplayground.app.coroutines.delayTask
+import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
 import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskException
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
@@ -13,15 +14,15 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 class CallbackTaskUseCase
-@Inject constructor(
-    appCoroutineScope: AppCoroutineScope
-) : BaseCoroutineUseCase(appCoroutineScope) {
+@Inject constructor() : BaseUseCase() {
 
     private class ExecutorWithCallback {
 
-        fun executeAction(input: String,
-                          successCallback: (Int) -> Unit,
-                          errorCallback: () -> Unit) {
+        fun executeAction(
+            input: String,
+            successCallback: (Int) -> Unit,
+            errorCallback: () -> Unit
+        ) {
             if (input == "SUCCESS") {
                 successCallback(10)
             } else {

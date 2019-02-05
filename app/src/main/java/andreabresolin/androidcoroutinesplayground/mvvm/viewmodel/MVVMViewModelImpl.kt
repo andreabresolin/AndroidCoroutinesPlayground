@@ -1,12 +1,12 @@
 package andreabresolin.androidcoroutinesplayground.mvvm.viewmodel
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.coroutines.awaitOrReturn
+import andreabresolin.androidcoroutinesplayground.app.coroutines.*
 import andreabresolin.androidcoroutinesplayground.app.domain.task.*
 import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.TimeoutCancellationException
 
 class MVVMViewModelImpl
 constructor(
@@ -74,13 +74,13 @@ constructor(
         delayTask(1000)
 
         task1State.value = RUNNING
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(this, 100, 500, 1500)
 
         task2State.value = RUNNING
-        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelTask2.executeAsync(this, 300, 200, 2000)
 
         task3State.value = RUNNING
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(this, 200, 600, 1800)
 
         task1State.value = processTaskResult(task1Result.await())
         task2State.value = processTaskResult(task2Result.await())
@@ -115,13 +115,13 @@ constructor(
         delayTask(1000)
 
         task1State.value = RUNNING
-        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(100, 500, 1500)
+        val task1Result: Deferred<TaskExecutionResult> = parallelTask1.executeAsync(this, 100, 500, 1500)
 
         task2State.value = RUNNING
-        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(300, 200, 2000)
+        val task2Result: Deferred<TaskExecutionResult> = parallelErrorTask.executeAsync(this, 300, 200, 2000)
 
         task3State.value = RUNNING
-        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(200, 600, 1800)
+        val task3Result: Deferred<TaskExecutionResult> = parallelTask3.executeAsync(this, 200, 600, 1800)
 
         task1State.value = processTaskResult(task1Result.await())
         task2State.value = processTaskResult(task2Result.await())
@@ -174,7 +174,7 @@ constructor(
             delayTask(1000)
             task1State.value = RUNNING
 
-            longComputationTask1Deferred = longComputationTask1.executeAsync(500, 10)
+            longComputationTask1Deferred = longComputationTask1.executeAsync(this, 500, 10)
             longComputationTask1Deferred?.let {
                 task1State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
             }
@@ -185,7 +185,7 @@ constructor(
             delayTask(1000)
             task2State.value = RUNNING
 
-            longComputationTask2Deferred = longComputationTask2.executeAsync(1000, 5)
+            longComputationTask2Deferred = longComputationTask2.executeAsync(this, 1000, 5)
             longComputationTask2Deferred?.let {
                 task2State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
             }
@@ -196,7 +196,7 @@ constructor(
             delayTask(1000)
             task3State.value = RUNNING
 
-            longComputationTask3Deferred = longComputationTask3.executeAsync(300, 20)
+            longComputationTask3Deferred = longComputationTask3.executeAsync(this, 300, 20)
             longComputationTask3Deferred?.let {
                 task3State.value = processTaskResult(it.awaitOrReturn(TaskExecutionCancelled))
             }
@@ -213,5 +213,40 @@ constructor(
 
     override fun cancelLongComputationTask3() {
         longComputationTask3Deferred?.cancel()
+    }
+
+    override fun runLongComputationTasksWithTimeout() {
+        uiJob {
+            task1State.value = INITIAL
+            delayTask(1000)
+            task1State.value = RUNNING
+
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 6000)
+            task1State.value = processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled))
+        }
+
+        uiJob {
+            task2State.value = INITIAL
+            delayTask(1000)
+            task2State.value = RUNNING
+
+            try {
+                uiTask(timeout = 3000) {
+                    val taskResult: Deferred<TaskExecutionResult> = longComputationTask2.executeAsync(this, 1000, 5)
+                    task2State.value = processTaskResult(taskResult.await())
+                }
+            } catch (e: TimeoutCancellationException) {
+                task2State.value = processTaskResult(TaskExecutionCancelled)
+            }
+        }
+
+        uiJob {
+            task3State.value = INITIAL
+            delayTask(1000)
+            task3State.value = RUNNING
+
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20, 2000)
+            task3State.value = processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled))
+        }
     }
 }

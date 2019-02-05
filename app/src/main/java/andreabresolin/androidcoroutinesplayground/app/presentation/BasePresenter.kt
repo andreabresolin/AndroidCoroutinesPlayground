@@ -1,6 +1,12 @@
 package andreabresolin.androidcoroutinesplayground.app.presentation
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancelChildren
 
 abstract class BasePresenter
-constructor(appCoroutineScope: AppCoroutineScope) : AppCoroutineScope by appCoroutineScope
+constructor(private val coroutineScope: CoroutineScope) : CoroutineScope by coroutineScope {
+
+    fun cancelTasks() {
+        coroutineScope.coroutineContext.cancelChildren()
+    }
+}

@@ -3,7 +3,7 @@ package andreabresolin.androidcoroutinesplayground.app.domain.task
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.util.DateTimeProvider
-import andreabresolin.androidcoroutinesplayground.base.BaseMockitoTest
+import andreabresolin.androidcoroutinesplayground.testing.BaseMockitoTest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -27,10 +27,7 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
         actualExecuteResult = null
         actualExecuteException = null
 
-        subject = LongComputationTaskUseCase(
-            testAppCoroutineScope,
-            mockDateTimeProvider
-        )
+        subject = LongComputationTaskUseCase(mockDateTimeProvider)
     }
 
     // region Test
@@ -71,7 +68,7 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
     private fun givenExecutionWillHandleIterationsAndThenBeCancelled(iterationDuration: Int,
                                                                      cancellationIterationNumber: Int) {
         givenExecutionWillHandleIterations(iterationDuration, cancellationIterationNumber - 1).willAnswer {
-            testAppCoroutineScope.cancelAll()
+            testAppCoroutineScope.cancelTasks()
             return@willAnswer 0L
         }
     }
@@ -82,7 +79,7 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     private fun whenExecuteAsyncWith(iterationDuration: Long, iterationsCount: Long) = runBlocking {
         try {
-            actualExecuteResult = subject.executeAsync(iterationDuration, iterationsCount).await()
+            actualExecuteResult = subject.executeAsync(testAppCoroutineScope, iterationDuration, iterationsCount).await()
         } catch (e: Exception) {
             actualExecuteException = e
         }

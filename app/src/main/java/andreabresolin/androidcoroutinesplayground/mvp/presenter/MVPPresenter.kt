@@ -22,5 +22,7 @@ interface MVPPresenter {
 
     fun cancelLongComputationTask3()
 
-    fun cancelAll()
+    fun runLongComputationTasksWithTimeout()
+
+    fun cancelTasks()
 }

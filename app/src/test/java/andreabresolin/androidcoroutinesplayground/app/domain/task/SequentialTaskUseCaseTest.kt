@@ -3,7 +3,7 @@ package andreabresolin.androidcoroutinesplayground.app.domain.task
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.repository.RemoteRepository
-import andreabresolin.androidcoroutinesplayground.base.BaseMockitoTest
+import andreabresolin.androidcoroutinesplayground.testing.BaseMockitoTest
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -23,9 +23,7 @@ class SequentialTaskUseCaseTest : BaseMockitoTest() {
 
     @Before
     fun before() {
-        subject = SequentialTaskUseCase(
-            testAppCoroutineScope,
-            mockRemoteRepository)
+        subject = SequentialTaskUseCase(mockRemoteRepository)
     }
 
     // region Test

@@ -28,7 +28,7 @@ class MVPFragment : BaseFragment(), MVPView {
     }
 
     override fun onStop() {
-        presenter.cancelAll()
+        presenter.cancelTasks()
         super.onStop()
     }
 
@@ -43,6 +43,7 @@ class MVPFragment : BaseFragment(), MVPView {
         cancelLongComputation1Btn.setOnClickListener { onCancelLongComputation1BtnClicked() }
         cancelLongComputation2Btn.setOnClickListener { onCancelLongComputation2BtnClicked() }
         cancelLongComputation3Btn.setOnClickListener { onCancelLongComputation3BtnClicked() }
+        runLongComputationWithTimeoutBtn.setOnClickListener { onRunLongComputationWithTimeoutBtnClicked() }
     }
 
     private fun onRunSequentialBtnClicked() {
@@ -83,6 +84,10 @@ class MVPFragment : BaseFragment(), MVPView {
 
     private fun onCancelLongComputation3BtnClicked() {
         presenter.cancelLongComputationTask3()
+    }
+
+    private fun onRunLongComputationWithTimeoutBtnClicked() {
+        presenter.runLongComputationTasksWithTimeout()
     }
 
     private fun applyTaskStyleForState(taskView: View, taskExecutionState: TaskExecutionState) {

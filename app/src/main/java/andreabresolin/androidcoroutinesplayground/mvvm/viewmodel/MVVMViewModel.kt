@@ -31,4 +31,6 @@ constructor(appCoroutineScope: AppCoroutineScope) : BaseViewModel(appCoroutineSc
     abstract fun cancelLongComputationTask2()
 
     abstract fun cancelLongComputationTask3()
+
+    abstract fun runLongComputationTasksWithTimeout()
 }

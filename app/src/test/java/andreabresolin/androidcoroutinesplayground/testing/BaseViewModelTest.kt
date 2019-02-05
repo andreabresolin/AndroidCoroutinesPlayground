@@ -1,4 +1,4 @@
-package andreabresolin.androidcoroutinesplayground.base
+package andreabresolin.androidcoroutinesplayground.testing
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Lifecycle

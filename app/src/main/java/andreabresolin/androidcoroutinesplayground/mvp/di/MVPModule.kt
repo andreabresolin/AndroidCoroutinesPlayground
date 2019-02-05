@@ -1,7 +1,5 @@
 package andreabresolin.androidcoroutinesplayground.mvp.di
 
-import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutineScope
-import andreabresolin.androidcoroutinesplayground.app.coroutines.defaut.LoggingAppCoroutineScope
 import andreabresolin.androidcoroutinesplayground.app.di.scope.PerFragment
 import andreabresolin.androidcoroutinesplayground.mvp.presenter.MVPPresenter
 import andreabresolin.androidcoroutinesplayground.mvp.presenter.MVPPresenterImpl
@@ -12,10 +10,6 @@ import dagger.Module
 
 @Module
 abstract class MVPModule {
-
-    @PerFragment
-    @Binds
-    abstract fun bindAppCoroutineScope(appCoroutineScope: LoggingAppCoroutineScope): AppCoroutineScope
 
     @PerFragment
     @Binds
