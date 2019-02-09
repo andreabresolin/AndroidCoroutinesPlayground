@@ -15,7 +15,7 @@ class TestAppCoroutineScope
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Unconfined + job
 
-    fun cancelTasks() {
+    fun cancelJobs() {
         coroutineContext.cancelChildren()
     }
 }

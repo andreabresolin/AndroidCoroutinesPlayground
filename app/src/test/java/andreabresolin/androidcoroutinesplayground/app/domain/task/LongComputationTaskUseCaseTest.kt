@@ -1,10 +1,12 @@
 package andreabresolin.androidcoroutinesplayground.app.domain.task
 
+import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutinesConfiguration.Companion.TEST_TIMEOUT
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.util.DateTimeProvider
 import andreabresolin.androidcoroutinesplayground.testing.BaseMockitoTest
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -34,16 +36,24 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     @Test
     fun executeAsync_executesTask() {
-        givenExecutionWillHandleIterations(300, 10)
-        whenExecuteAsyncWith(300, 10)
+        givenExecuteAsyncWillHandleIterations(300, 10)
+        whenExecuteAsyncWith(300, 10, 0)
         thenResultIs(TaskExecutionSuccess(10))
         thenIterationsCountIs(10)
     }
 
     @Test
     fun executeAsync_executesTaskUntilCancelled() {
-        givenExecutionWillHandleIterationsAndThenBeCancelled(300, 5)
-        whenExecuteAsyncWith(300, 10)
+        givenExecuteAsyncWillHandleIterationsAndThenBeCancelled(300, 5)
+        whenExecuteAsyncWith(300, 10, 0)
+        thenTaskCancelled()
+        thenIterationsCountIs(5)
+    }
+
+    @Test
+    fun executeAsync_executesTaskUntilTimeout() {
+        givenExecuteAsyncWillHandleIterationsAndLastMoreThan(300, 5, TEST_TIMEOUT + 200L)
+        whenExecuteAsyncWith(300, 10, TEST_TIMEOUT)
         thenTaskCancelled()
         thenIterationsCountIs(5)
     }
@@ -52,8 +62,8 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     // region Given
 
-    private fun givenExecutionWillHandleIterations(iterationDuration: Int,
-                                                   iterationsCount: Int): BDDMyOngoingStubbing<Long> {
+    private fun givenExecuteAsyncWillHandleIterations(iterationDuration: Int,
+                                                      iterationsCount: Int): BDDMyOngoingStubbing<Long> {
         var currentTime = 0L
         var ongoingStubbing = given(mockDateTimeProvider.currentTimeMillis()).willReturn(currentTime)
 
@@ -65,11 +75,22 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
         return ongoingStubbing
     }
 
-    private fun givenExecutionWillHandleIterationsAndThenBeCancelled(iterationDuration: Int,
-                                                                     cancellationIterationNumber: Int) {
-        givenExecutionWillHandleIterations(iterationDuration, cancellationIterationNumber - 1).willAnswer {
-            testAppCoroutineScope.cancelTasks()
+    private fun givenExecuteAsyncWillHandleIterationsAndThenBeCancelled(iterationDuration: Int,
+                                                                        cancellationIterationNumber: Int) {
+        givenExecuteAsyncWillHandleIterations(iterationDuration, cancellationIterationNumber - 1).willAnswer {
+            testAppCoroutineScope.cancelJobs()
             return@willAnswer 0L
+        }
+    }
+
+    private fun givenExecuteAsyncWillHandleIterationsAndLastMoreThan(iterationDuration: Int,
+                                                                     iterationsCount: Int,
+                                                                     minimumExecutionDuration: Long) {
+        givenExecuteAsyncWillHandleIterations(iterationDuration, iterationsCount - 1).willAnswer {
+            return@willAnswer runBlocking {
+                delay(minimumExecutionDuration)
+                return@runBlocking 0L
+            }
         }
     }
 
@@ -77,9 +98,11 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     // region When
 
-    private fun whenExecuteAsyncWith(iterationDuration: Long, iterationsCount: Long) = runBlocking {
+    private fun whenExecuteAsyncWith(iterationDuration: Long,
+                                     iterationsCount: Long,
+                                     timeout: Long) = runBlocking {
         try {
-            actualExecuteResult = subject.executeAsync(testAppCoroutineScope, iterationDuration, iterationsCount).await()
+            actualExecuteResult = subject.executeAsync(testAppCoroutineScope, iterationDuration, iterationsCount, timeout).await()
         } catch (e: Exception) {
             actualExecuteException = e
         }

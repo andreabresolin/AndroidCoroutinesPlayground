@@ -18,11 +18,11 @@ class ParallelTaskUseCase
 ) : BaseUseCase() {
 
     fun executeAsync(
-        coroutineScope: CoroutineScope,
+        parentScope: CoroutineScope,
         startDelay: Long,
         minDuration: Long,
         maxDuration: Long
-    ): Deferred<TaskExecutionResult> = coroutineScope.backgroundTaskAsync {
+    ): Deferred<TaskExecutionResult> = parentScope.backgroundTaskAsync {
         delayTask(startDelay)
 
         val taskDuration = Random.nextLong(minDuration, maxDuration + 1)

@@ -220,7 +220,7 @@ class MVPPresenterImpl
             delayTask(1000)
             view.updateTaskExecutionState(1, RUNNING)
 
-            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 6000)
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 4000)
             view.updateTaskExecutionState(1, processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled)))
         }
 
@@ -239,12 +239,12 @@ class MVPPresenterImpl
             }
         }
 
-        uiJob {
+        uiJob(timeout = 2000) {
             view.updateTaskExecutionState(3, INITIAL)
             delayTask(1000)
             view.updateTaskExecutionState(3, RUNNING)
 
-            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20, 2000)
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20)
             view.updateTaskExecutionState(3, processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled)))
         }
     }

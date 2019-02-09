@@ -15,10 +15,13 @@ abstract class BaseMockitoTest {
         @BeforeClass
         @JvmStatic
         fun beforeClassBaseMockitoTest() {
-            AppCoroutinesConfiguration.uiDispatcher = Dispatchers.Unconfined
-            AppCoroutinesConfiguration.backgroundDispatcher = Dispatchers.Unconfined
-            AppCoroutinesConfiguration.ioDispatcher = Dispatchers.Unconfined
-            AppCoroutinesConfiguration.isDelayEnabled = false
+            with (AppCoroutinesConfiguration) {
+                uiDispatcher = Dispatchers.Unconfined
+                backgroundDispatcher = Dispatchers.Unconfined
+                ioDispatcher = Dispatchers.Unconfined
+                isDelayEnabled = false
+                useTestTimeout = true
+            }
         }
     }
 

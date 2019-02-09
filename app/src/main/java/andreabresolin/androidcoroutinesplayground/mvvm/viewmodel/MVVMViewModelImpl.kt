@@ -221,7 +221,7 @@ constructor(
             delayTask(1000)
             task1State.value = RUNNING
 
-            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 6000)
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask1.executeAsync(this, 500, 10, 4000)
             task1State.value = processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled))
         }
 
@@ -240,12 +240,12 @@ constructor(
             }
         }
 
-        uiJob {
+        uiJob(timeout = 2000) {
             task3State.value = INITIAL
             delayTask(1000)
             task3State.value = RUNNING
 
-            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20, 2000)
+            val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20)
             task3State.value = processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled))
         }
     }

@@ -9,6 +9,7 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.testing.BaseViewModelTest
 import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.anyObj
+import andreabresolin.androidcoroutinesplayground.testing.MockableDeferred
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.*
 import org.junit.Before
@@ -54,11 +55,11 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     @Mock
     private lateinit var mockLongComputationTask3: LongComputationTaskUseCase
     @Mock
-    private lateinit var mockLongComputationTask1Deferred: Deferred<TaskExecutionResult>
+    private lateinit var mockLongComputationTask1Deferred: MockableDeferred<TaskExecutionResult>
     @Mock
-    private lateinit var mockLongComputationTask2Deferred: Deferred<TaskExecutionResult>
+    private lateinit var mockLongComputationTask2Deferred: MockableDeferred<TaskExecutionResult>
     @Mock
-    private lateinit var mockLongComputationTask3Deferred: Deferred<TaskExecutionResult>
+    private lateinit var mockLongComputationTask3Deferred: MockableDeferred<TaskExecutionResult>
 
     private lateinit var subject: MVVMViewModelImpl
 
@@ -203,6 +204,36 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         thenTaskIsCancelled(mockLongComputationTask2Deferred)
     }
 
+    @Test
+    fun runLongComputationTasksWithTimeout_completesLongComputationTasksIfFasterThanTimeout() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatLongComputationTask1WillReturn(TaskExecutionSuccess(10))
+        givenThatLongComputationTask2WillReturn(TaskExecutionSuccess(20))
+        givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
+        whenRunLongComputationTasksWithTimeout()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenWaitForCompletionOfLongComputationTasks()
+    }
+
+    @Test
+    fun runLongComputationTasksWithTimeout_cancelsLongComputationTasksIfSlowerThanTimeout() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatLongComputationTask1WillTimeout()
+        givenThatLongComputationTask2WillTimeout()
+        givenThatLongComputationTask3WillTimeout()
+        whenRunLongComputationTasksWithTimeout()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, CANCELLED))
+        thenWaitForCompletionOfLongComputationTasks()
+    }
+
     // endregion Test
 
     // region Given
@@ -274,6 +305,24 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         whenRunLongComputationTasks()
     }
 
+    private fun givenThatLongComputationTaskWillTimeout(longComputationTask: LongComputationTaskUseCase,
+                                                        taskExecutionDeferred: Deferred<TaskExecutionResult>) = runBlocking {
+        given(longComputationTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(taskExecutionDeferred)
+        given(taskExecutionDeferred.await()).willThrow(mock(TimeoutCancellationException::class.java))
+    }
+
+    private fun givenThatLongComputationTask1WillTimeout() {
+        givenThatLongComputationTaskWillTimeout(mockLongComputationTask1, mockLongComputationTask1Deferred)
+    }
+
+    private fun givenThatLongComputationTask2WillTimeout() {
+        givenThatLongComputationTaskWillTimeout(mockLongComputationTask2, mockLongComputationTask2Deferred)
+    }
+
+    private fun givenThatLongComputationTask3WillTimeout() {
+        givenThatLongComputationTaskWillTimeout(mockLongComputationTask3, mockLongComputationTask3Deferred)
+    }
+
     // endregion Given
 
     // region When
@@ -308,6 +357,10 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
 
     private fun whenCancelLongComputationTask2() {
         subject.cancelLongComputationTask2()
+    }
+
+    private fun whenRunLongComputationTasksWithTimeout() {
+        subject.runLongComputationTasksWithTimeout()
     }
 
     // endregion When

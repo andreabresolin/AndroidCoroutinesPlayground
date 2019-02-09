@@ -6,7 +6,7 @@ import kotlinx.coroutines.cancelChildren
 abstract class BasePresenter
 constructor(private val coroutineScope: CoroutineScope) : CoroutineScope by coroutineScope {
 
-    fun cancelTasks() {
+    fun cancelJobs() {
         coroutineScope.coroutineContext.cancelChildren()
     }
 }

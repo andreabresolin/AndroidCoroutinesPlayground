@@ -28,7 +28,7 @@ class MVPFragment : BaseFragment(), MVPView {
     }
 
     override fun onStop() {
-        presenter.cancelTasks()
+        presenter.cancelJobs()
         super.onStop()
     }
 
