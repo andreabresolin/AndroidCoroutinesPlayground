@@ -52,6 +52,7 @@ class MVVMFragment : BaseFragment() {
         cancelLongComputation2Btn.setOnClickListener { onCancelLongComputation2BtnClicked() }
         cancelLongComputation3Btn.setOnClickListener { onCancelLongComputation3BtnClicked() }
         runLongComputationWithTimeoutBtn.setOnClickListener { onRunLongComputationWithTimeoutBtnClicked() }
+        runChannelsBtn.setOnClickListener { onRunChannelsBtnClicked() }
     }
 
     private val task1StateObserver = Observer<TaskExecutionState> { newState -> applyTaskStyleForState(task1Box, newState) }
@@ -110,5 +111,9 @@ class MVVMFragment : BaseFragment() {
 
     private fun onRunLongComputationWithTimeoutBtnClicked() {
         viewModel.runLongComputationTasksWithTimeout()
+    }
+
+    private fun onRunChannelsBtnClicked() {
+        viewModel.runChannelsTasks()
     }
 }

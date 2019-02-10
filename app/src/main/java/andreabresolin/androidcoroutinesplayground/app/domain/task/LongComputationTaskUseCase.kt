@@ -29,14 +29,14 @@ class LongComputationTaskUseCase
 
         while (isActive && iterationNumber <= iterationsCount) {
             if (dateTimeProvider.currentTimeMillis() >= nextIterationTime) {
-                logIteration("LongComputationTaskUseCase.execute@$parentScope", iterationNumber)
+                logIteration("LongComputationTaskUseCase.executeAsync@$parentScope", iterationNumber)
                 nextIterationTime += iterationDuration
                 iterationNumber++
             }
         }
 
         if (!isActive) {
-            logCancelled("LongComputationTaskUseCase.execute@$parentScope")
+            logCancelled("LongComputationTaskUseCase.executeAsync@$parentScope")
             throw CancellationException()
         }
 

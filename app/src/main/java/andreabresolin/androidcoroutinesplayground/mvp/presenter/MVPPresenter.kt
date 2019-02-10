@@ -24,5 +24,7 @@ interface MVPPresenter {
 
     fun runLongComputationTasksWithTimeout()
 
+    fun runChannelsTasks()
+
     fun cancelJobs()
 }

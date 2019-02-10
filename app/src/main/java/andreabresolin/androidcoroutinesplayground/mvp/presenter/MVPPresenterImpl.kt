@@ -6,8 +6,10 @@ import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.presentation.BasePresenter
 import andreabresolin.androidcoroutinesplayground.mvp.view.MVPView
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
 import javax.inject.Inject
 
 class MVPPresenterImpl
@@ -30,7 +32,10 @@ class MVPPresenterImpl
     private val callbackTask3: CallbackTaskUseCase,
     private val longComputationTask1: LongComputationTaskUseCase,
     private val longComputationTask2: LongComputationTaskUseCase,
-    private val longComputationTask3: LongComputationTaskUseCase
+    private val longComputationTask3: LongComputationTaskUseCase,
+    private val channelTask1: ChannelTaskUseCase,
+    private val channelTask2: ChannelTaskUseCase,
+    private val channelTask3: ChannelTaskUseCase
 ) : BasePresenter(appCoroutineScope), MVPPresenter {
 
     private var longComputationTask1Deferred: Deferred<TaskExecutionResult>? = null
@@ -246,6 +251,74 @@ class MVPPresenterImpl
 
             val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20)
             view.updateTaskExecutionState(3, processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled)))
+        }
+    }
+
+    override fun runChannelsTasks() {
+        uiJob {
+            view.updateTaskExecutionState(1, INITIAL)
+
+            val channel = Channel<Long>()
+            val itemProcessingTime = 400L
+
+            val taskResult: Deferred<TaskExecutionResult> = channelTask1.executeAsync(this, 800, 10, channel)
+
+            for (receivedItem in channel) {
+                view.updateTaskExecutionState(1, RUNNING)
+                backgroundTask { delayTask(itemProcessingTime) }
+                view.updateTaskExecutionState(1, INITIAL)
+            }
+
+            view.updateTaskExecutionState(1, processTaskResult(taskResult.await()))
+        }
+
+        uiJob {
+            try {
+                view.updateTaskExecutionState(2, INITIAL)
+
+                val channel = Channel<Long>()
+                val itemProcessingTime = 1000L
+
+                val taskResult: Deferred<TaskExecutionResult> = channelTask2.executeAsync(this, 800, 10, channel)
+
+                for (receivedItem in channel) {
+                    view.updateTaskExecutionState(2, RUNNING)
+                    backgroundTask { delayTask(itemProcessingTime) }
+                    view.updateTaskExecutionState(2, INITIAL)
+                }
+
+                view.updateTaskExecutionState(2, processTaskResult(taskResult.await()))
+            } catch (e: CancellationException) {
+                view.updateTaskExecutionState(2, processTaskResult(TaskExecutionCancelled))
+            }
+        }
+
+        uiJob {
+            view.updateTaskExecutionState(3, INITIAL)
+
+            val primaryChannel = Channel<Long>()
+            val backpressureChannel = Channel<Long>()
+            val itemProcessingTime = 1500L
+
+            val taskResult: Deferred<TaskExecutionResult> = channelTask3.executeAsync(this, 500, 20, primaryChannel, backpressureChannel)
+
+            val primaryHandler = backgroundTaskAsync {
+                for (receivedItem in primaryChannel) {
+                    uiTask { view.updateTaskExecutionState(3, RUNNING) }
+                    delayTask(itemProcessingTime)
+                    uiTask { view.updateTaskExecutionState(3, INITIAL) }
+                }
+            }
+
+            val backpressureHandler = backgroundTaskAsync {
+                for (receivedItem in backpressureChannel) {
+                    uiTask { view.updateTaskExecutionState(3, ERROR) }
+                }
+            }
+
+            primaryHandler.await()
+            backpressureHandler.await()
+            view.updateTaskExecutionState(3, processTaskResult(taskResult.await()))
         }
     }
 }

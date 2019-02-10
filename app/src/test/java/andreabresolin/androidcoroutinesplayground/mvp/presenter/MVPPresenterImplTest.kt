@@ -66,6 +66,12 @@ class MVPPresenterImplTest : BasePresenterTest() {
     private lateinit var mockLongComputationTask2Deferred: MockableDeferred<TaskExecutionResult>
     @Mock
     private lateinit var mockLongComputationTask3Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockChannelTask1: ChannelTaskUseCase
+    @Mock
+    private lateinit var mockChannelTask2: ChannelTaskUseCase
+    @Mock
+    private lateinit var mockChannelTask3: ChannelTaskUseCase
 
     private lateinit var subject: MVPPresenterImpl
 
@@ -90,7 +96,10 @@ class MVPPresenterImplTest : BasePresenterTest() {
             mockCallbackTask3,
             mockLongComputationTask1,
             mockLongComputationTask2,
-            mockLongComputationTask3)
+            mockLongComputationTask3,
+            mockChannelTask1,
+            mockChannelTask2,
+            mockChannelTask3)
     }
 
     // region Test

@@ -5,8 +5,10 @@ import andreabresolin.androidcoroutinesplayground.app.domain.task.*
 import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.channels.Channel
 
 class MVVMViewModelImpl
 constructor(
@@ -27,7 +29,10 @@ constructor(
     private val callbackTask3: CallbackTaskUseCase,
     private val longComputationTask1: LongComputationTaskUseCase,
     private val longComputationTask2: LongComputationTaskUseCase,
-    private val longComputationTask3: LongComputationTaskUseCase
+    private val longComputationTask3: LongComputationTaskUseCase,
+    private val channelTask1: ChannelTaskUseCase,
+    private val channelTask2: ChannelTaskUseCase,
+    private val channelTask3: ChannelTaskUseCase
 ) : MVVMViewModel(appCoroutineScope) {
 
     override val task1State = MutableLiveData<TaskExecutionState>()
@@ -247,6 +252,74 @@ constructor(
 
             val taskResult: Deferred<TaskExecutionResult> = longComputationTask3.executeAsync(this, 300, 20)
             task3State.value = processTaskResult(taskResult.awaitOrReturn(TaskExecutionCancelled))
+        }
+    }
+
+    override fun runChannelsTasks() {
+        uiJob {
+            task1State.value = INITIAL
+
+            val channel = Channel<Long>()
+            val itemProcessingTime = 400L
+
+            val taskResult: Deferred<TaskExecutionResult> = channelTask1.executeAsync(this, 800, 10, channel)
+
+            for (receivedItem in channel) {
+                task1State.value = RUNNING
+                backgroundTask { delayTask(itemProcessingTime) }
+                task1State.value = INITIAL
+            }
+
+            task1State.value = processTaskResult(taskResult.await())
+        }
+
+        uiJob {
+            try {
+                task2State.value = INITIAL
+
+                val channel = Channel<Long>()
+                val itemProcessingTime = 1000L
+
+                val taskResult: Deferred<TaskExecutionResult> = channelTask2.executeAsync(this, 800, 10, channel)
+
+                for (receivedItem in channel) {
+                    task2State.value = RUNNING
+                    backgroundTask { delayTask(itemProcessingTime) }
+                    task2State.value = INITIAL
+                }
+
+                task2State.value = processTaskResult(taskResult.await())
+            } catch (e: CancellationException) {
+                task2State.value = CANCELLED
+            }
+        }
+
+        uiJob {
+            task3State.value = INITIAL
+
+            val primaryChannel = Channel<Long>()
+            val backpressureChannel = Channel<Long>()
+            val itemProcessingTime = 1500L
+
+            val taskResult: Deferred<TaskExecutionResult> = channelTask3.executeAsync(this, 500, 20, primaryChannel, backpressureChannel)
+
+            val primaryHandler = backgroundTaskAsync {
+                for (receivedItem in primaryChannel) {
+                    task3State.postValue(RUNNING)
+                    delayTask(itemProcessingTime)
+                    task3State.postValue(INITIAL)
+                }
+            }
+
+            val backpressureHandler = backgroundTaskAsync {
+                for (receivedItem in backpressureChannel) {
+                    task3State.postValue(ERROR)
+                }
+            }
+
+            primaryHandler.await()
+            backpressureHandler.await()
+            task3State.value = processTaskResult(taskResult.await())
         }
     }
 }
