@@ -21,13 +21,13 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     private lateinit var subject: LongComputationTaskUseCase
 
-    private var actualExecuteResult: TaskExecutionResult? = null
-    private var actualExecuteException: Exception? = null
+    private var actualExecuteAsyncResult: TaskExecutionResult? = null
+    private var actualExecuteAsyncException: Exception? = null
 
     @Before
     fun before() {
-        actualExecuteResult = null
-        actualExecuteException = null
+        actualExecuteAsyncResult = null
+        actualExecuteAsyncException = null
 
         subject = LongComputationTaskUseCase(mockDateTimeProvider)
     }
@@ -102,9 +102,9 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
                                      iterationsCount: Long,
                                      timeout: Long) = runBlocking {
         try {
-            actualExecuteResult = subject.executeAsync(testAppCoroutineScope, iterationDuration, iterationsCount, timeout).await()
+            actualExecuteAsyncResult = subject.executeAsync(testAppCoroutineScope, iterationDuration, iterationsCount, timeout).await()
         } catch (e: Exception) {
-            actualExecuteException = e
+            actualExecuteAsyncException = e
         }
     }
 
@@ -112,12 +112,12 @@ class LongComputationTaskUseCaseTest : BaseMockitoTest() {
 
     // region Then
 
-    private fun thenResultIs(result: TaskExecutionResult) = runBlocking {
-        assertThat(actualExecuteResult).isEqualTo(result)
+    private fun thenResultIs(result: TaskExecutionResult) {
+        assertThat(actualExecuteAsyncResult).isEqualTo(result)
     }
 
     private fun thenTaskCancelled() {
-        assertThat(actualExecuteException).isInstanceOf(CancellationException::class.java)
+        assertThat(actualExecuteAsyncException).isInstanceOf(CancellationException::class.java)
     }
 
     private fun thenIterationsCountIs(iterationsCount: Int) {

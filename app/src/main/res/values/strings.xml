@@ -7,8 +7,8 @@
 
     <string name="sequential">Sequential</string>
     <string name="parallel">Parallel</string>
-    <string name="sequential_with_error">Sequential + error</string>
-    <string name="parallel_with_error">Parallel + error</string>
+    <string name="sequential_with_error">Seq + error</string>
+    <string name="parallel_with_error">Par + error</string>
     <string name="multiple">Multiple</string>
     <string name="callback_with_error">Callback + error</string>
     <string name="long_cancellable">Long</string>

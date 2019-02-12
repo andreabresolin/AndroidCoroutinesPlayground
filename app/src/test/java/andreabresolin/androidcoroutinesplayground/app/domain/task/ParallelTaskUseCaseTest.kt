@@ -20,7 +20,7 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
 
     private lateinit var subject: ParallelTaskUseCase
 
-    private lateinit var actualExecuteResult: Deferred<TaskExecutionResult>
+    private lateinit var actualExecuteAsyncResult: Deferred<TaskExecutionResult>
 
     @Before
     fun before() {
@@ -49,7 +49,7 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
     // region When
 
     private fun whenExecuteAsyncWith(startDelay: Long, minDuration: Long, maxDuration: Long) = runBlocking {
-        actualExecuteResult = subject.executeAsync(testAppCoroutineScope, startDelay, minDuration, maxDuration)
+        actualExecuteAsyncResult = subject.executeAsync(testAppCoroutineScope, startDelay, minDuration, maxDuration)
     }
 
     // endregion When
@@ -57,7 +57,7 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
     // region Then
 
     private fun thenResultIs(result: TaskExecutionResult) = runBlocking {
-        assertThat(actualExecuteResult.await()).isEqualTo(result)
+        assertThat(actualExecuteAsyncResult.await()).isEqualTo(result)
     }
 
     // endregion Then

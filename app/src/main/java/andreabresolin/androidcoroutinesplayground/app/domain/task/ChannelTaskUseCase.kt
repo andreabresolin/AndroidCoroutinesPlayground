@@ -3,14 +3,12 @@ package andreabresolin.androidcoroutinesplayground.app.domain.task
 import andreabresolin.androidcoroutinesplayground.app.coroutines.backgroundTaskAsync
 import andreabresolin.androidcoroutinesplayground.app.coroutines.delayTask
 import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionCancelled
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.app.util.logIteration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.selects.select
 import javax.inject.Inject
 
@@ -26,7 +24,7 @@ class ChannelTaskUseCase
     ): Deferred<TaskExecutionResult> = parentScope.backgroundTaskAsync {
         var iterationNumber = 1L
 
-        while (isActive && iterationNumber <= sentItemsCount) {
+        while (iterationNumber <= sentItemsCount) {
             logIteration("ChannelTaskUseCase.executeAsync@$parentScope", iterationNumber)
             delayTask(sendInterval)
 
@@ -45,10 +43,6 @@ class ChannelTaskUseCase
         primaryChannel.close()
         backupChannel?.close()
 
-        return@backgroundTaskAsync if (isActive) {
-            TaskExecutionSuccess(sentItemsCount)
-        } else {
-            TaskExecutionCancelled
-        }
+        return@backgroundTaskAsync TaskExecutionSuccess(sentItemsCount)
     }
 }
