@@ -10,17 +10,18 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.mvp.view.MVPView
 import andreabresolin.androidcoroutinesplayground.testing.BasePresenterTest
 import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.anyObj
+import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.captureObj
 import andreabresolin.androidcoroutinesplayground.testing.MockableDeferred
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentCaptor
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.then
 import org.mockito.Mock
-import org.mockito.Mockito.inOrder
-import org.mockito.Mockito.mock
+import org.mockito.Mockito.*
 
 class MVPPresenterImplTest : BasePresenterTest() {
 
@@ -72,8 +73,19 @@ class MVPPresenterImplTest : BasePresenterTest() {
     private lateinit var mockChannelTask2: ChannelTaskUseCase
     @Mock
     private lateinit var mockChannelTask3: ChannelTaskUseCase
+    @Mock
+    private lateinit var mockChannelTask1Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockChannelTask2Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockChannelTask3Deferred: MockableDeferred<TaskExecutionResult>
 
     private lateinit var subject: MVPPresenterImpl
+
+    private var givenChannel1Items = listOf<Long>()
+    private var givenChannel2Items = listOf<Long>()
+    private var givenChannel3Items = listOf<Long>()
+    private var givenBackpressureChannel3Items = listOf<Long>()
 
     @Before
     fun before() {
@@ -110,9 +122,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatSequentialTaskWillReturn(mockSequentialTask2, TaskExecutionSuccess(20))
         givenThatSequentialTaskWillReturn(mockSequentialTask3, TaskExecutionSuccess(30))
         whenRunSequentialTasks()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -122,9 +134,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatParallelTaskWillReturn(mockParallelTask2, TaskExecutionSuccess(20))
         givenThatParallelTaskWillReturn(mockParallelTask3, TaskExecutionSuccess(30))
         whenRunParallelTasks()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -134,9 +146,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatSequentialErrorTaskWillReturn(mockSequentialErrorTask, TaskExecutionError(CustomTaskException()))
         givenThatSequentialTaskWillReturn(mockSequentialTask3, TaskExecutionSuccess(30))
         whenRunSequentialTasksWithError()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -146,9 +158,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatParallelErrorTaskWillReturn(mockParallelErrorTask, TaskExecutionError(CustomTaskException()))
         givenThatParallelTaskWillReturn(mockParallelTask3, TaskExecutionSuccess(30))
         whenRunParallelTasksWithError()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -158,9 +170,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatMultipleTasksWillReturn(mockMultipleTasks2, TaskExecutionSuccess(20))
         givenThatMultipleTasksWillReturn(mockMultipleTasks3, TaskExecutionSuccess(30))
         whenRunMultipleTasks()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -170,9 +182,9 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionError(CustomTaskException()))
         givenThatCallbackTaskWillReturn(mockCallbackTask3, TaskExecutionError(CustomTaskException()))
         whenRunCallbackTasksWithError()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, ERROR))
         thenNoMoreInteractionsWithView()
     }
 
@@ -182,10 +194,11 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatLongComputationTask2WillReturn(TaskExecutionSuccess(20))
         givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
         whenRunLongComputationTasks()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenWaitForCompletionOfLongComputationTasks()
+        thenNoMoreInteractionsWithView()
     }
 
     @Test
@@ -195,11 +208,12 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
         givenThatRunLongComputationTasksHasBeenCalled()
         whenCancelLongComputationTask2()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, CANCELLED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenWaitForCompletionOfLongComputationTasks()
         thenTaskIsCancelled(mockLongComputationTask2Deferred)
+        thenNoMoreInteractionsWithView()
     }
 
     @Test
@@ -208,10 +222,11 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatLongComputationTask2WillReturn(TaskExecutionSuccess(20))
         givenThatLongComputationTask3WillReturn(TaskExecutionSuccess(30))
         whenRunLongComputationTasksWithTimeout()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, COMPLETED))
         thenWaitForCompletionOfLongComputationTasks()
+        thenNoMoreInteractionsWithView()
     }
 
     @Test
@@ -220,10 +235,51 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatLongComputationTask2WillTimeout()
         givenThatLongComputationTask3WillTimeout()
         whenRunLongComputationTasksWithTimeout()
-        thenTaskStateChangesAre(1, listOf(INITIAL, RUNNING, CANCELLED))
-        thenTaskStateChangesAre(2, listOf(INITIAL, RUNNING, CANCELLED))
-        thenTaskStateChangesAre(3, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, CANCELLED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, CANCELLED))
         thenWaitForCompletionOfLongComputationTasks()
+        thenNoMoreInteractionsWithView()
+    }
+
+    @Test
+    fun runChannelsTasks_handlesAllItemsSentByChannelsTasks() {
+        givenThatChannelTask1WillReturn(TaskExecutionSuccess(1))
+        givenThatChannelTask2WillReturn(TaskExecutionSuccess(2))
+        givenThatChannelTask3WillReturn(TaskExecutionSuccess(3))
+        givenThatChannel1WillSend(listOf(10L, 20L, 30L, 40L, 50L))
+        givenThatChannel2WillSend(listOf(100L, 200L, 300L))
+        givenThatChannel3WillSend(listOf(1000L, 2000L, 3000L, 4000L))
+        givenThatBackpressureChannel3WillSend(listOf(10000L, 20000L))
+        whenRunChannelsTasks()
+        thenTaskStatesSequenceIs(1,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                COMPLETED))
+        thenTaskStatesSequenceIs(2,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                COMPLETED))
+        thenTaskStatesSequenceIs(3,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                ERROR,
+                ERROR,
+                COMPLETED))
+        thenWaitForCompletionOfChannelsTasks()
+        thenNoMoreInteractionsWithView()
     }
 
     // endregion Test
@@ -311,6 +367,47 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenThatLongComputationTaskWillTimeout(mockLongComputationTask3, mockLongComputationTask3Deferred)
     }
 
+    private fun givenThatChannelTaskWillReturn(channelTask: ChannelTaskUseCase,
+                                               taskExecutionDeferred: Deferred<TaskExecutionResult>,
+                                               taskExecutionResult: TaskExecutionResult,
+                                               hasBackpressureChannel: Boolean) = runBlocking {
+        given(taskExecutionDeferred.await()).willReturn(taskExecutionResult)
+        given(channelTask.executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            anyObj(Channel()),
+            if (hasBackpressureChannel) anyObj<Channel<Long>>(Channel()) else eq(null))).willReturn(taskExecutionDeferred)
+    }
+
+    private fun givenThatChannelTask1WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask1, mockChannelTask1Deferred, taskExecutionResult, false)
+    }
+
+    private fun givenThatChannelTask2WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask2, mockChannelTask2Deferred, taskExecutionResult, false)
+    }
+
+    private fun givenThatChannelTask3WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask3, mockChannelTask3Deferred, taskExecutionResult, true)
+    }
+
+    private fun givenThatChannel1WillSend(items: List<Long>) {
+        givenChannel1Items = items
+    }
+
+    private fun givenThatChannel2WillSend(items: List<Long>) {
+        givenChannel2Items = items
+    }
+
+    private fun givenThatChannel3WillSend(items: List<Long>) {
+        givenChannel3Items = items
+    }
+
+    private fun givenThatBackpressureChannel3WillSend(items: List<Long>) {
+        givenBackpressureChannel3Items = items
+    }
+
     // endregion Given
 
     // region When
@@ -351,15 +448,71 @@ class MVPPresenterImplTest : BasePresenterTest() {
         subject.runLongComputationTasksWithTimeout()
     }
 
+    private fun whenRunChannelsTasks() = runBlocking {
+        subject.runChannelsTasks()
+
+        val mockSendChannel = mock(Channel::class.java) as SendChannel<Long>
+        val channel1Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val channel2Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val channel3Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val backpressureChannel3Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+
+        then(mockChannelTask1).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel1Captor, mockSendChannel) as SendChannel<Long>,
+            eq(null))
+        then(mockChannelTask2).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel2Captor, mockSendChannel) as SendChannel<Long>,
+            eq(null))
+        then(mockChannelTask3).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel3Captor, mockSendChannel) as SendChannel<Long>,
+            captureObj(backpressureChannel3Captor, mockSendChannel) as SendChannel<Long>)
+
+        val givenChannel1 = channel1Captor.value as Channel<Long>
+        val givenChannel2 = channel2Captor.value as Channel<Long>
+        val givenChannel3 = channel3Captor.value as Channel<Long>
+        val givenBackpressureChannel3 = backpressureChannel3Captor.value as Channel<Long>
+
+        givenChannel1Items.forEach { givenChannel1.send(it) }
+        givenChannel2Items.forEach { givenChannel2.send(it) }
+        givenChannel3Items.forEach { givenChannel3.send(it) }
+        givenBackpressureChannel3Items.forEach { givenBackpressureChannel3.send(it) }
+
+        givenChannel1.close()
+        givenChannel2.close()
+        givenChannel3.close()
+        givenBackpressureChannel3.close()
+    }
+
     // endregion When
 
     // region Then
 
-    private fun thenTaskStateChangesAre(taskNumber: Int, states: List<TaskExecutionState>) {
+    private fun thenTaskStatesSequenceIs(taskNumber: Int, states: List<TaskExecutionState>) {
         val inOrder = inOrder(mockView)
+        var lastState: TaskExecutionState? = null
+        var times = 0
 
-        states.forEach { state ->
-            then(mockView).should(inOrder).updateTaskExecutionState(taskNumber, state)
+        for (state in states) {
+            if (lastState != null && state != lastState) {
+                then(mockView).should(inOrder, times(times)).updateTaskExecutionState(taskNumber, lastState)
+                times = 0
+            }
+
+            lastState = state
+            times++
+        }
+
+        if (lastState != null) {
+            then(mockView).should(inOrder, times(times)).updateTaskExecutionState(taskNumber, lastState)
         }
     }
 
@@ -375,6 +528,12 @@ class MVPPresenterImplTest : BasePresenterTest() {
 
     private fun thenTaskIsCancelled(taskDeferred: Deferred<TaskExecutionResult>) {
         then(taskDeferred).should().cancel()
+    }
+
+    private fun thenWaitForCompletionOfChannelsTasks() = runBlocking {
+        then(mockChannelTask1Deferred).should().await()
+        then(mockChannelTask2Deferred).should().await()
+        then(mockChannelTask3Deferred).should().await()
     }
 
     // endregion Then

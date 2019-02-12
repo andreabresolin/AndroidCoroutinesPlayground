@@ -9,11 +9,15 @@ import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import andreabresolin.androidcoroutinesplayground.testing.BaseViewModelTest
 import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.anyObj
+import andreabresolin.androidcoroutinesplayground.testing.KotlinTestUtils.Companion.captureObj
 import andreabresolin.androidcoroutinesplayground.testing.MockableDeferred
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.*
 import org.mockito.Mock
@@ -66,8 +70,19 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     private lateinit var mockChannelTask2: ChannelTaskUseCase
     @Mock
     private lateinit var mockChannelTask3: ChannelTaskUseCase
+    @Mock
+    private lateinit var mockChannelTask1Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockChannelTask2Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockChannelTask3Deferred: MockableDeferred<TaskExecutionResult>
 
     private lateinit var subject: MVVMViewModelImpl
+
+    private var givenChannel1Items = listOf<Long>()
+    private var givenChannel2Items = listOf<Long>()
+    private var givenChannel3Items = listOf<Long>()
+    private var givenBackpressureChannel3Items = listOf<Long>()
 
     @Before
     fun before() {
@@ -243,6 +258,51 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         thenWaitForCompletionOfLongComputationTasks()
     }
 
+    @Test
+    fun runChannelsTasks_handlesAllItemsSentByChannelsTasks() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatChannelTask1WillReturn(TaskExecutionSuccess(1))
+        givenThatChannelTask2WillReturn(TaskExecutionSuccess(2))
+        givenThatChannelTask3WillReturn(TaskExecutionSuccess(3))
+        givenThatChannel1WillSend(listOf(10L, 20L, 30L, 40L, 50L))
+        givenThatChannel2WillSend(listOf(100L, 200L, 300L))
+        givenThatChannel3WillSend(listOf(1000L, 2000L, 3000L, 4000L))
+        givenThatBackpressureChannel3WillSend(listOf(10000L, 20000L))
+        whenRunChannelsTasks()
+        thenTaskStatesSequenceIs(
+            subject.task1State,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                COMPLETED))
+        thenTaskStatesSequenceIs(
+            subject.task2State,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                COMPLETED))
+        thenTaskStatesSequenceIs(
+            subject.task3State,
+            listOf(
+                INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                RUNNING, INITIAL,
+                ERROR,
+                ERROR,
+                COMPLETED))
+        thenWaitForCompletionOfChannelsTasks()
+    }
+
     // endregion Test
 
     // region Given
@@ -332,6 +392,47 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         givenThatLongComputationTaskWillTimeout(mockLongComputationTask3, mockLongComputationTask3Deferred)
     }
 
+    private fun givenThatChannelTaskWillReturn(channelTask: ChannelTaskUseCase,
+                                               taskExecutionDeferred: Deferred<TaskExecutionResult>,
+                                               taskExecutionResult: TaskExecutionResult,
+                                               hasBackpressureChannel: Boolean) = runBlocking {
+        given(taskExecutionDeferred.await()).willReturn(taskExecutionResult)
+        given(channelTask.executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            anyObj(Channel()),
+            if (hasBackpressureChannel) anyObj<Channel<Long>>(Channel()) else eq(null))).willReturn(taskExecutionDeferred)
+    }
+
+    private fun givenThatChannelTask1WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask1, mockChannelTask1Deferred, taskExecutionResult, false)
+    }
+
+    private fun givenThatChannelTask2WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask2, mockChannelTask2Deferred, taskExecutionResult, false)
+    }
+
+    private fun givenThatChannelTask3WillReturn(taskExecutionResult: TaskExecutionResult) = runBlocking {
+        givenThatChannelTaskWillReturn(mockChannelTask3, mockChannelTask3Deferred, taskExecutionResult, true)
+    }
+
+    private fun givenThatChannel1WillSend(items: List<Long>) {
+        givenChannel1Items = items
+    }
+
+    private fun givenThatChannel2WillSend(items: List<Long>) {
+        givenChannel2Items = items
+    }
+
+    private fun givenThatChannel3WillSend(items: List<Long>) {
+        givenChannel3Items = items
+    }
+
+    private fun givenThatBackpressureChannel3WillSend(items: List<Long>) {
+        givenBackpressureChannel3Items = items
+    }
+
     // endregion Given
 
     // region When
@@ -372,6 +473,50 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         subject.runLongComputationTasksWithTimeout()
     }
 
+    private fun whenRunChannelsTasks() = runBlocking {
+        subject.runChannelsTasks()
+
+        val mockSendChannel = mock(Channel::class.java) as SendChannel<Long>
+        val channel1Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val channel2Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val channel3Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+        val backpressureChannel3Captor = ArgumentCaptor.forClass(SendChannel::class.java)
+
+        then(mockChannelTask1).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel1Captor, mockSendChannel) as SendChannel<Long>,
+            eq(null))
+        then(mockChannelTask2).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel2Captor, mockSendChannel) as SendChannel<Long>,
+            eq(null))
+        then(mockChannelTask3).should().executeAsync(
+            anyObj<CoroutineScope>(testAppCoroutineScope),
+            anyLong(),
+            anyLong(),
+            captureObj(channel3Captor, mockSendChannel) as SendChannel<Long>,
+            captureObj(backpressureChannel3Captor, mockSendChannel) as SendChannel<Long>)
+
+        val givenChannel1 = channel1Captor.value as Channel<Long>
+        val givenChannel2 = channel2Captor.value as Channel<Long>
+        val givenChannel3 = channel3Captor.value as Channel<Long>
+        val givenBackpressureChannel3 = backpressureChannel3Captor.value as Channel<Long>
+
+        givenChannel1Items.forEach { givenChannel1.send(it) }
+        givenChannel2Items.forEach { givenChannel2.send(it) }
+        givenChannel3Items.forEach { givenChannel3.send(it) }
+        givenBackpressureChannel3Items.forEach { givenBackpressureChannel3.send(it) }
+
+        givenChannel1.close()
+        givenChannel2.close()
+        givenChannel3.close()
+        givenBackpressureChannel3.close()
+    }
+
     // endregion When
 
     // region Then
@@ -389,6 +534,12 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
 
     private fun thenTaskIsCancelled(taskDeferred: Deferred<TaskExecutionResult>) {
         then(taskDeferred).should().cancel()
+    }
+
+    private fun thenWaitForCompletionOfChannelsTasks() = runBlocking {
+        then(mockChannelTask1Deferred).should().await()
+        then(mockChannelTask2Deferred).should().await()
+        then(mockChannelTask3Deferred).should().await()
     }
 
     // endregion Then
