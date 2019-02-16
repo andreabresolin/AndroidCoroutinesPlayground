@@ -77,7 +77,7 @@ class ChannelTaskUseCaseTest : BaseMockitoTest() {
                 actualPrimaryChannelItems.add(receivedItem)
 
                 if (backupChannelSentItemsCount > 0 && receivedItem == primaryChannelSentItemsCount) {
-                    delay(1000)
+                    break
                 }
             }
         }
@@ -85,6 +85,8 @@ class ChannelTaskUseCaseTest : BaseMockitoTest() {
         var backupChannelConsumer: Deferred<Unit>? = null
         givenBackupChannel?.let { backupChannel ->
             backupChannelConsumer = testAppCoroutineScope.async(Dispatchers.Default) {
+                primaryChannelConsumer.await()
+
                 actualBackupChannelItems.clear()
 
                 for (receivedItem in backupChannel) {
