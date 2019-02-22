@@ -2,13 +2,13 @@ package andreabresolin.androidcoroutinesplayground.mvvm.viewmodel
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.*
 import andreabresolin.androidcoroutinesplayground.app.domain.task.*
+import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskException
 import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import androidx.lifecycle.MutableLiveData
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.io.IOException
 
 class MVVMViewModelImpl
 constructor(
@@ -32,7 +32,8 @@ constructor(
     private val longComputationTask3: LongComputationTaskUseCase,
     private val channelTask1: ChannelTaskUseCase,
     private val channelTask2: ChannelTaskUseCase,
-    private val channelTask3: ChannelTaskUseCase
+    private val channelTask3: ChannelTaskUseCase,
+    private val exceptionsTask: ExceptionsTaskUseCase
 ) : MVVMViewModel(appCoroutineScope) {
 
     override val task1State = MutableLiveData<TaskExecutionState>()
@@ -320,6 +321,40 @@ constructor(
             primaryHandler.await()
             backpressureHandler.await()
             task3State.value = processTaskResult(taskResult.await())
+        }
+    }
+
+    override fun runExceptionsTasks() = uiJob {
+        task1State.value = INITIAL
+        task2State.value = INITIAL
+        task3State.value = INITIAL
+
+        delayTask(1000)
+
+        task1State.value = RUNNING
+        try {
+            val task1Result: TaskExecutionResult = exceptionsTask.execute(100, 500, 1500)
+            task1State.value = processTaskResult(task1Result)
+        } catch (e: CustomTaskException) {
+            task1State.value = ERROR
+        }
+
+        task2State.value = RUNNING
+        val task2Result: Deferred<TaskExecutionResult> = exceptionsTask.executeAsync(this, 300, 200, 2000)
+
+        task3State.value = RUNNING
+        val task3Result: Deferred<TaskExecutionResult> = exceptionsTask.executeWithRepositoryAsync(this, 200, 600, 1800)
+
+        try {
+            task2State.value = processTaskResult(task2Result.await())
+        } catch (e: CustomTaskException) {
+            task2State.value = ERROR
+        }
+
+        try {
+            task3State.value = processTaskResult(task3Result.await())
+        } catch (e: IOException) {
+            task3State.value = ERROR
         }
     }
 }

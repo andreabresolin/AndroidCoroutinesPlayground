@@ -22,6 +22,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.then
 import org.mockito.Mock
 import org.mockito.Mockito.*
+import java.io.IOException
 
 class MVPPresenterImplTest : BasePresenterTest() {
 
@@ -79,6 +80,12 @@ class MVPPresenterImplTest : BasePresenterTest() {
     private lateinit var mockChannelTask2Deferred: MockableDeferred<TaskExecutionResult>
     @Mock
     private lateinit var mockChannelTask3Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockExceptionsTask: ExceptionsTaskUseCase
+    @Mock
+    private lateinit var mockExceptionsTask2Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockExceptionsTask3Deferred: MockableDeferred<TaskExecutionResult>
 
     private lateinit var subject: MVPPresenterImpl
 
@@ -111,7 +118,8 @@ class MVPPresenterImplTest : BasePresenterTest() {
             mockLongComputationTask3,
             mockChannelTask1,
             mockChannelTask2,
-            mockChannelTask3)
+            mockChannelTask3,
+            mockExceptionsTask)
     }
 
     // region Test
@@ -282,6 +290,17 @@ class MVPPresenterImplTest : BasePresenterTest() {
         thenNoMoreInteractionsWithView()
     }
 
+    @Test
+    fun runExceptionsTasks_runsExceptionsTasksWithError() {
+        givenThatExceptionsTaskExecuteWillThrow(CustomTaskException::class.java)
+        givenThatExceptionsTaskExecuteAsyncWillThrow(CustomTaskException::class.java)
+        givenThatExceptionsTaskExecuteWithRepositoryAsyncWillThrow(IOException::class.java)
+        whenRunExceptionsTasks()
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, ERROR))
+    }
+
     // endregion Test
 
     // region Given
@@ -408,6 +427,20 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenBackpressureChannel3Items = items
     }
 
+    private fun <T: Exception> givenThatExceptionsTaskExecuteWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask.execute(anyLong(), anyLong(), anyLong())).willAnswer { throw exception.newInstance() }
+    }
+
+    private fun <T: Exception> givenThatExceptionsTaskExecuteAsyncWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask2Deferred.await()).willAnswer { throw exception.newInstance() }
+        given(mockExceptionsTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(mockExceptionsTask2Deferred)
+    }
+
+    private fun <T: Exception> givenThatExceptionsTaskExecuteWithRepositoryAsyncWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask3Deferred.await()).willAnswer { throw exception.newInstance() }
+        given(mockExceptionsTask.executeWithRepositoryAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(mockExceptionsTask3Deferred)
+    }
+
     // endregion Given
 
     // region When
@@ -490,6 +523,10 @@ class MVPPresenterImplTest : BasePresenterTest() {
         givenChannel2.close()
         givenChannel3.close()
         givenBackpressureChannel3.close()
+    }
+
+    private fun whenRunExceptionsTasks() {
+        subject.runExceptionsTasks()
     }
 
     // endregion When

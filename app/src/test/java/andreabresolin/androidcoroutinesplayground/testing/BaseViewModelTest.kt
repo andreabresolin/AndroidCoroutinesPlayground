@@ -51,7 +51,7 @@ abstract class BaseViewModelTest : BaseMockitoTest() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    protected fun <T> assertThatLiveDataStatesSequenceIs(liveData: LiveData<T>, statesSequence: List<T>) {
-        assertThat(liveDataChanges[liveData] as List<T>?).isEqualTo(statesSequence)
+    protected fun <T> assertThatLiveDataStatesSequenceIs(liveData: LiveData<T>, expectedStatesSequence: List<T>) {
+        assertThat(liveDataChanges[liveData] as List<T>?).isEqualTo(expectedStatesSequence)
     }
 }

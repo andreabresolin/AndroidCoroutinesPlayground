@@ -21,6 +21,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.*
 import org.mockito.Mock
+import java.io.IOException
 
 class MVVMViewModelImplTest : BaseViewModelTest() {
 
@@ -76,6 +77,12 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     private lateinit var mockChannelTask2Deferred: MockableDeferred<TaskExecutionResult>
     @Mock
     private lateinit var mockChannelTask3Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockExceptionsTask: ExceptionsTaskUseCase
+    @Mock
+    private lateinit var mockExceptionsTask2Deferred: MockableDeferred<TaskExecutionResult>
+    @Mock
+    private lateinit var mockExceptionsTask3Deferred: MockableDeferred<TaskExecutionResult>
 
     private lateinit var subject: MVVMViewModelImpl
 
@@ -107,7 +114,8 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
             mockLongComputationTask3,
             mockChannelTask1,
             mockChannelTask2,
-            mockChannelTask3)
+            mockChannelTask3,
+            mockExceptionsTask)
     }
 
     // region Test
@@ -303,6 +311,20 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         thenWaitForCompletionOfChannelsTasks()
     }
 
+    @Test
+    fun runExceptionsTasks_runsExceptionsTasksWithError() {
+        givenThatStateWillChangeFor(subject.task1State)
+        givenThatStateWillChangeFor(subject.task2State)
+        givenThatStateWillChangeFor(subject.task3State)
+        givenThatExceptionsTaskExecuteWillThrow(CustomTaskException::class.java)
+        givenThatExceptionsTaskExecuteAsyncWillThrow(CustomTaskException::class.java)
+        givenThatExceptionsTaskExecuteWithRepositoryAsyncWillThrow(IOException::class.java)
+        whenRunExceptionsTasks()
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, ERROR))
+    }
+
     // endregion Test
 
     // region Given
@@ -433,6 +455,20 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         givenBackpressureChannel3Items = items
     }
 
+    private fun <T: Exception> givenThatExceptionsTaskExecuteWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask.execute(anyLong(), anyLong(), anyLong())).willAnswer { throw exception.newInstance() }
+    }
+
+    private fun <T: Exception> givenThatExceptionsTaskExecuteAsyncWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask2Deferred.await()).willAnswer { throw exception.newInstance() }
+        given(mockExceptionsTask.executeAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(mockExceptionsTask2Deferred)
+    }
+
+    private fun <T: Exception> givenThatExceptionsTaskExecuteWithRepositoryAsyncWillThrow(exception: Class<T>) = runBlocking {
+        given(mockExceptionsTask3Deferred.await()).willAnswer { throw exception.newInstance() }
+        given(mockExceptionsTask.executeWithRepositoryAsync(anyObj<CoroutineScope>(testAppCoroutineScope), anyLong(), anyLong(), anyLong())).willReturn(mockExceptionsTask3Deferred)
+    }
+
     // endregion Given
 
     // region When
@@ -515,6 +551,10 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         givenChannel2.close()
         givenChannel3.close()
         givenBackpressureChannel3.close()
+    }
+
+    private fun whenRunExceptionsTasks() {
+        subject.runExceptionsTasks()
     }
 
     // endregion When

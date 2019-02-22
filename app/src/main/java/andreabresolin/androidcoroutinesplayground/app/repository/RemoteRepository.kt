@@ -1,5 +1,6 @@
 package andreabresolin.androidcoroutinesplayground.app.repository
 
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -9,5 +10,9 @@ class RemoteRepository
 
     fun fetchData(input: Long): Long {
         return input * 10
+    }
+
+    fun fetchDataWithException(): Long {
+        throw IOException("Error while reading repository data")
     }
 }

@@ -111,11 +111,11 @@ class ChannelTaskUseCaseTest : BaseMockitoTest() {
     // region Then
 
     private fun thenItemsSentOnPrimaryChannelAre(vararg items: Long) {
-        assertThat(actualPrimaryChannelItems).isEqualTo(items.toList())
+        assertThat(actualPrimaryChannelItems).isEqualTo(items.asList())
     }
 
     private fun thenItemsSentOnBackupChannelAre(vararg items: Long) {
-        assertThat(actualBackupChannelItems).isEqualTo(items.toList())
+        assertThat(actualBackupChannelItems).isEqualTo(items.asList())
     }
 
     private fun thenResultIs(result: TaskExecutionResult) {

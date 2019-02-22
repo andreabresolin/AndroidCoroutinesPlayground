@@ -45,6 +45,7 @@ class MVPFragment : BaseFragment(), MVPView {
         cancelLongComputation3Btn.setOnClickListener { onCancelLongComputation3BtnClicked() }
         runLongComputationWithTimeoutBtn.setOnClickListener { onRunLongComputationWithTimeoutBtnClicked() }
         runChannelsBtn.setOnClickListener { onRunChannelsBtnClicked() }
+        runExceptionsBtn.setOnClickListener { onRunExceptionsBtnClicked() }
     }
 
     private fun onRunSequentialBtnClicked() {
@@ -93,6 +94,10 @@ class MVPFragment : BaseFragment(), MVPView {
 
     private fun onRunChannelsBtnClicked() {
         presenter.runChannelsTasks()
+    }
+
+    private fun onRunExceptionsBtnClicked() {
+        presenter.runExceptionsTasks()
     }
 
     private fun applyTaskStyleForState(taskView: View, taskExecutionState: TaskExecutionState) {

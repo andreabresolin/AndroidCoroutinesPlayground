@@ -7,10 +7,10 @@ import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskExcept
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 class CallbackTaskUseCase
@@ -35,18 +35,18 @@ class CallbackTaskUseCase
         val taskDuration = Random.nextLong(1000, 2000)
         delayTask(taskDuration)
 
-        return@backgroundTask suspendCoroutine<TaskExecutionResult> { continuation ->
+        return@backgroundTask suspendCancellableCoroutine<TaskExecutionResult> { continuation ->
             ExecutorWithCallback().executeAction(param,
                 { result -> successCallback(result, continuation) },
                 { errorCallback(continuation) })
         }
     }
 
-    private fun successCallback(result: Int, continuation: Continuation<TaskExecutionResult>) {
+    private fun successCallback(result: Int, continuation: CancellableContinuation<TaskExecutionResult>) {
         continuation.resume(TaskExecutionSuccess(result.toLong()))
     }
 
-    private fun errorCallback(continuation: Continuation<TaskExecutionResult>) {
+    private fun errorCallback(continuation: CancellableContinuation<TaskExecutionResult>) {
         continuation.resume(TaskExecutionError(CustomTaskException()))
     }
 }

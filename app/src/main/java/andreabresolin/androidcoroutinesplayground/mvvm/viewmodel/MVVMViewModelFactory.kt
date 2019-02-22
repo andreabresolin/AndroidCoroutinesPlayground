@@ -28,7 +28,8 @@ class MVVMViewModelFactory
     private val longComputationTask3: LongComputationTaskUseCase,
     private val channelTask1: ChannelTaskUseCase,
     private val channelTask2: ChannelTaskUseCase,
-    private val channelTask3: ChannelTaskUseCase
+    private val channelTask3: ChannelTaskUseCase,
+    private val exceptionsTask: ExceptionsTaskUseCase
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -54,7 +55,8 @@ class MVVMViewModelFactory
             longComputationTask3,
             channelTask1,
             channelTask2,
-            channelTask3
+            channelTask3,
+            exceptionsTask
         ) as T
     }
 }

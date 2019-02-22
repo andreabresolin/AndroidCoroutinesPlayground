@@ -172,6 +172,16 @@
                     android:layout_marginTop="@dimen/items_vertical_spacing"
                     android:text="@string/channels"/>
 
+            <Button
+                    android:id="@+id/runExceptionsBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/runLongComputationWithTimeoutBtn"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginTop="@dimen/items_vertical_spacing"
+                    android:text="@string/exceptions"/>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>

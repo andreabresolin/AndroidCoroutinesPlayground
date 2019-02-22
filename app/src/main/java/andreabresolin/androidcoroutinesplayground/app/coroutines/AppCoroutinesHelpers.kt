@@ -3,6 +3,7 @@ package andreabresolin.androidcoroutinesplayground.app.coroutines
 import andreabresolin.androidcoroutinesplayground.app.util.logCompleted
 import andreabresolin.androidcoroutinesplayground.app.util.logStarted
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
 internal class AppCoroutinesHelpers {
@@ -12,6 +13,8 @@ internal class AppCoroutinesHelpers {
             JOB, TASK, TASK_ASYNC
         }
 
+        private val loggingTaskId = AtomicLong(1L)
+
         private suspend fun <T> executeBlock(
             parentScope: CoroutineScope,
             callerType: HelperType,
@@ -19,6 +22,8 @@ internal class AppCoroutinesHelpers {
             block: suspend CoroutineScope.() -> T
         ): T {
             if (AppCoroutinesConfiguration.isLoggingEnabled) {
+                val taskId = loggingTaskId.getAndIncrement()
+
                 val methodName = when (coroutineContext) {
                     AppCoroutinesConfiguration.uiDispatcher -> "ui"
                     AppCoroutinesConfiguration.backgroundDispatcher -> "background"
@@ -28,7 +33,7 @@ internal class AppCoroutinesHelpers {
                     HelperType.JOB -> "Job"
                     HelperType.TASK -> "Task"
                     HelperType.TASK_ASYNC -> "TaskAsync"
-                } + "@$parentScope"
+                } + "#$taskId"
 
                 logStarted(methodName)
                 val result = parentScope.block()
@@ -50,23 +55,25 @@ internal class AppCoroutinesHelpers {
         fun startJob(
             parentScope: CoroutineScope,
             coroutineContext: CoroutineContext,
-            timeout: Long,
+            timeout: Long = 0L,
             block: suspend CoroutineScope.() -> Unit
         ) {
             parentScope.launch(coroutineContext) {
-                if (timeout > 0L) {
-                    withTimeout(computeTimeout(timeout)) {
+                supervisorScope {
+                    if (timeout > 0L) {
+                        withTimeout(computeTimeout(timeout)) {
+                            executeBlock(this, HelperType.JOB, coroutineContext, block)
+                        }
+                    } else {
                         executeBlock(this, HelperType.JOB, coroutineContext, block)
                     }
-                } else {
-                    executeBlock(this, HelperType.JOB, coroutineContext, block)
                 }
             }
         }
 
         suspend fun <T> startTask(
             coroutineContext: CoroutineContext,
-            timeout: Long,
+            timeout: Long = 0L,
             block: suspend CoroutineScope.() -> T
         ): T {
             return withContext(coroutineContext) {
@@ -83,16 +90,18 @@ internal class AppCoroutinesHelpers {
         fun <T> startTaskAsync(
             parentScope: CoroutineScope,
             coroutineContext: CoroutineContext,
-            timeout: Long,
+            timeout: Long = 0L,
             block: suspend CoroutineScope.() -> T
         ): Deferred<T> {
             return parentScope.async(coroutineContext) {
-                return@async if (timeout > 0L) {
-                    withTimeout(computeTimeout(timeout)) {
+                return@async supervisorScope {
+                    return@supervisorScope if (timeout > 0L) {
+                        withTimeout(computeTimeout(timeout)) {
+                            executeBlock(this, HelperType.TASK_ASYNC, coroutineContext, block)
+                        }
+                    } else {
                         executeBlock(this, HelperType.TASK_ASYNC, coroutineContext, block)
                     }
-                } else {
-                    executeBlock(this, HelperType.TASK_ASYNC, coroutineContext, block)
                 }
             }
         }

@@ -3,10 +3,7 @@ package andreabresolin.androidcoroutinesplayground.app.coroutines
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutinesHelpers.Companion.startJob
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutinesHelpers.Companion.startTask
 import andreabresolin.androidcoroutinesplayground.app.coroutines.AppCoroutinesHelpers.Companion.startTaskAsync
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 
 fun CoroutineScope.uiJob(timeout: Long = 0L, block: suspend CoroutineScope.() -> Unit) {
     startJob(this, AppCoroutinesConfiguration.uiDispatcher, timeout, block)
@@ -55,5 +52,17 @@ suspend fun <T> Deferred<T>.awaitOrReturn(returnIfCancelled: T): T {
         await()
     } catch (e: CancellationException) {
         returnIfCancelled
+    }
+}
+
+suspend fun <T> awaitAllOrCancel(vararg deferreds: Deferred<T>): List<T> {
+    try {
+        return awaitAll(*deferreds)
+    } catch (e: Exception) {
+        if (e !is CancellationException) {
+            deferreds.forEach { if (it.isActive) it.cancel() }
+        }
+
+        throw e
     }
 }

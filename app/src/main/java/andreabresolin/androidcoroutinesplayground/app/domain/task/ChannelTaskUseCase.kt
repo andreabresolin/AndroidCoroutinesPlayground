@@ -15,7 +15,7 @@ import javax.inject.Inject
 class ChannelTaskUseCase
 @Inject constructor() : BaseUseCase() {
 
-    suspend fun executeAsync(
+    fun executeAsync(
         parentScope: CoroutineScope,
         sendInterval: Long,
         sentItemsCount: Long,

@@ -26,5 +26,7 @@ interface MVPPresenter {
 
     fun runChannelsTasks()
 
+    fun runExceptionsTasks()
+
     fun cancelJobs()
 }

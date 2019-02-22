@@ -2,6 +2,7 @@ package andreabresolin.androidcoroutinesplayground.mvp.presenter
 
 import andreabresolin.androidcoroutinesplayground.app.coroutines.*
 import andreabresolin.androidcoroutinesplayground.app.domain.task.*
+import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskException
 import andreabresolin.androidcoroutinesplayground.app.model.*
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionState.*
 import andreabresolin.androidcoroutinesplayground.app.presentation.BasePresenter
@@ -10,6 +11,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
+import java.io.IOException
 import javax.inject.Inject
 
 class MVPPresenterImpl
@@ -35,7 +37,8 @@ class MVPPresenterImpl
     private val longComputationTask3: LongComputationTaskUseCase,
     private val channelTask1: ChannelTaskUseCase,
     private val channelTask2: ChannelTaskUseCase,
-    private val channelTask3: ChannelTaskUseCase
+    private val channelTask3: ChannelTaskUseCase,
+    private val exceptionsTask: ExceptionsTaskUseCase
 ) : BasePresenter(appCoroutineScope), MVPPresenter {
 
     private var longComputationTask1Deferred: Deferred<TaskExecutionResult>? = null
@@ -319,6 +322,40 @@ class MVPPresenterImpl
             primaryHandler.await()
             backpressureHandler.await()
             view.updateTaskExecutionState(3, processTaskResult(taskResult.await()))
+        }
+    }
+
+    override fun runExceptionsTasks() = uiJob {
+        view.updateTaskExecutionState(1, INITIAL)
+        view.updateTaskExecutionState(2, INITIAL)
+        view.updateTaskExecutionState(3, INITIAL)
+
+        delayTask(1000)
+
+        view.updateTaskExecutionState(1, RUNNING)
+        try {
+            val task1Result: TaskExecutionResult = exceptionsTask.execute(100, 500, 1500)
+            view.updateTaskExecutionState(1, processTaskResult(task1Result))
+        } catch (e: CustomTaskException) {
+            view.updateTaskExecutionState(1, ERROR)
+        }
+
+        view.updateTaskExecutionState(2, RUNNING)
+        val task2Result: Deferred<TaskExecutionResult> = exceptionsTask.executeAsync(this, 300, 200, 2000)
+
+        view.updateTaskExecutionState(3, RUNNING)
+        val task3Result: Deferred<TaskExecutionResult> = exceptionsTask.executeWithRepositoryAsync(this, 200, 600, 1800)
+
+        try {
+            view.updateTaskExecutionState(2, processTaskResult(task2Result.await()))
+        } catch (e: CustomTaskException) {
+            view.updateTaskExecutionState(2, ERROR)
+        }
+
+        try {
+            view.updateTaskExecutionState(3, processTaskResult(task3Result.await()))
+        } catch (e: IOException) {
+            view.updateTaskExecutionState(3, ERROR)
         }
     }
 }

@@ -8,7 +8,7 @@ import kotlin.coroutines.CoroutineContext
 open class AppCoroutineScope
 @Inject constructor() : CoroutineScope {
 
-    private val job: Job = Job()
+    private val job = Job()
 
     override val coroutineContext: CoroutineContext
         get() = AppCoroutinesConfiguration.uiDispatcher + job

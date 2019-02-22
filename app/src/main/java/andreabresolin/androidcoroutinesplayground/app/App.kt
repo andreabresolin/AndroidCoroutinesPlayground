@@ -16,6 +16,10 @@ class App : Application(), HasActivityInjector {
     @Inject
     internal lateinit var activityInjector: DispatchingAndroidInjector<Activity>
 
+    init {
+        System.setProperty("kotlinx.coroutines.debug", if (BuildConfig.DEBUG) "on" else "off")
+    }
+
     override fun onCreate() {
         super.onCreate()
 
