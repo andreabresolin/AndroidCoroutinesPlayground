@@ -195,13 +195,13 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
         givenThatStateWillChangeFor(subject.task1State)
         givenThatStateWillChangeFor(subject.task2State)
         givenThatStateWillChangeFor(subject.task3State)
-        givenThatCallbackTaskWillReturn(mockCallbackTask1, TaskExecutionSuccess(10))
-        givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionError(CustomTaskException()))
-        givenThatCallbackTaskWillReturn(mockCallbackTask3, TaskExecutionError(CustomTaskException()))
+        givenThatCallbackTaskWillThrow(mockCallbackTask1, CustomTaskException())
+        givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionSuccess(10))
+        givenThatCallbackTaskWillBeCancelled(mockCallbackTask3)
         whenRunCallbackTasksWithError()
-        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task1State, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(subject.task2State, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(subject.task3State, listOf(INITIAL, RUNNING, CANCELLED))
     }
 
     @Test
@@ -361,6 +361,15 @@ class MVVMViewModelImplTest : BaseViewModelTest() {
     private fun givenThatCallbackTaskWillReturn(callbackTask: CallbackTaskUseCase,
                                                 taskExecutionResult: TaskExecutionResult) = runBlocking {
         given(callbackTask.execute(anyString())).willReturn(taskExecutionResult)
+    }
+
+    private fun givenThatCallbackTaskWillThrow(callbackTask: CallbackTaskUseCase,
+                                               exception: Exception) = runBlocking {
+        given(callbackTask.execute(anyString())).willAnswer { throw exception }
+    }
+
+    private fun givenThatCallbackTaskWillBeCancelled(callbackTask: CallbackTaskUseCase) = runBlocking {
+        given(callbackTask.execute(anyString())).willThrow(CancellationException())
     }
 
     private fun givenThatLongComputationTaskWillReturn(longComputationTask: LongComputationTaskUseCase,

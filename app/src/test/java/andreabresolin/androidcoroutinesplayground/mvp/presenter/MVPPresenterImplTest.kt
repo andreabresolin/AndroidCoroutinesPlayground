@@ -186,13 +186,13 @@ class MVPPresenterImplTest : BasePresenterTest() {
 
     @Test
     fun runCallbackTasksWithError_runsCallbackTasksWithError() {
-        givenThatCallbackTaskWillReturn(mockCallbackTask1, TaskExecutionSuccess(10))
-        givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionError(CustomTaskException()))
-        givenThatCallbackTaskWillReturn(mockCallbackTask3, TaskExecutionError(CustomTaskException()))
+        givenThatCallbackTaskWillThrow(mockCallbackTask1, CustomTaskException())
+        givenThatCallbackTaskWillReturn(mockCallbackTask2, TaskExecutionSuccess(10))
+        givenThatCallbackTaskWillBeCancelled(mockCallbackTask3)
         whenRunCallbackTasksWithError()
-        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, COMPLETED))
-        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, ERROR))
-        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(1, listOf(INITIAL, RUNNING, ERROR))
+        thenTaskStatesSequenceIs(2, listOf(INITIAL, RUNNING, COMPLETED))
+        thenTaskStatesSequenceIs(3, listOf(INITIAL, RUNNING, CANCELLED))
         thenNoMoreInteractionsWithView()
     }
 
@@ -333,6 +333,15 @@ class MVPPresenterImplTest : BasePresenterTest() {
     private fun givenThatCallbackTaskWillReturn(callbackTask: CallbackTaskUseCase,
                                                 taskExecutionResult: TaskExecutionResult) = runBlocking {
         given(callbackTask.execute(anyString())).willReturn(taskExecutionResult)
+    }
+
+    private fun givenThatCallbackTaskWillThrow(callbackTask: CallbackTaskUseCase,
+                                               exception: Exception) = runBlocking {
+        given(callbackTask.execute(anyString())).willAnswer { throw exception }
+    }
+
+    private fun givenThatCallbackTaskWillBeCancelled(callbackTask: CallbackTaskUseCase) = runBlocking {
+        given(callbackTask.execute(anyString())).willThrow(CancellationException())
     }
 
     private fun givenThatLongComputationTaskWillReturn(longComputationTask: LongComputationTaskUseCase,

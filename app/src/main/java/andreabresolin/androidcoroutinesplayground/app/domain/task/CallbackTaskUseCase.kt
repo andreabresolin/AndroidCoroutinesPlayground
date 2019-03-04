@@ -4,13 +4,13 @@ import andreabresolin.androidcoroutinesplayground.app.coroutines.backgroundTask
 import andreabresolin.androidcoroutinesplayground.app.coroutines.delayTask
 import andreabresolin.androidcoroutinesplayground.app.domain.BaseUseCase
 import andreabresolin.androidcoroutinesplayground.app.exception.CustomTaskException
-import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionError
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionResult
 import andreabresolin.androidcoroutinesplayground.app.model.TaskExecutionSuccess
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.random.Random
 
 class CallbackTaskUseCase
@@ -20,13 +20,14 @@ class CallbackTaskUseCase
 
         fun executeAction(
             input: String,
-            successCallback: (Int) -> Unit,
+            successCallback: (Long) -> Unit,
+            cancelCallback: () -> Unit,
             errorCallback: () -> Unit
         ) {
-            if (input == "SUCCESS") {
-                successCallback(10)
-            } else {
-                errorCallback()
+            when (input) {
+                "SUCCESS" -> successCallback(10L)
+                "CANCEL" -> cancelCallback()
+                else -> errorCallback()
             }
         }
     }
@@ -38,15 +39,20 @@ class CallbackTaskUseCase
         return@backgroundTask suspendCancellableCoroutine<TaskExecutionResult> { continuation ->
             ExecutorWithCallback().executeAction(param,
                 { result -> successCallback(result, continuation) },
+                { cancelCallback(continuation) },
                 { errorCallback(continuation) })
         }
     }
 
-    private fun successCallback(result: Int, continuation: CancellableContinuation<TaskExecutionResult>) {
-        continuation.resume(TaskExecutionSuccess(result.toLong()))
+    private fun successCallback(result: Long, continuation: CancellableContinuation<TaskExecutionResult>) {
+        continuation.resume(TaskExecutionSuccess(result))
+    }
+
+    private fun cancelCallback(continuation: CancellableContinuation<TaskExecutionResult>) {
+        continuation.cancel()
     }
 
     private fun errorCallback(continuation: CancellableContinuation<TaskExecutionResult>) {
-        continuation.resume(TaskExecutionError(CustomTaskException()))
+        continuation.resumeWithException(CustomTaskException())
     }
 }

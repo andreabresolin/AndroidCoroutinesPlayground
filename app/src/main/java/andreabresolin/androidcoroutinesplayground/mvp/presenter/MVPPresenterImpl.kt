@@ -163,16 +163,24 @@ class MVPPresenterImpl
         delayTask(1000)
 
         view.updateTaskExecutionState(1, RUNNING)
-        val task1Result: TaskExecutionResult = callbackTask1.execute("RANDOM STRING")
-        view.updateTaskExecutionState(1, processTaskResult(task1Result))
+        try {
+            val task1Result: TaskExecutionResult = callbackTask1.execute("RANDOM STRING")
+            view.updateTaskExecutionState(1, processTaskResult(task1Result))
+        } catch (e: CustomTaskException) {
+            view.updateTaskExecutionState(1, processTaskResult(TaskExecutionError(e)))
+        }
 
         view.updateTaskExecutionState(2, RUNNING)
         val task2Result: TaskExecutionResult = callbackTask2.execute("SUCCESS")
         view.updateTaskExecutionState(2, processTaskResult(task2Result))
 
         view.updateTaskExecutionState(3, RUNNING)
-        val task3Result: TaskExecutionResult = callbackTask3.execute("SUCCESS")
-        view.updateTaskExecutionState(3, processTaskResult(task3Result))
+        try {
+            val task3Result: TaskExecutionResult = callbackTask3.execute("CANCEL")
+            view.updateTaskExecutionState(3, processTaskResult(task3Result))
+        } catch (e: CancellationException) {
+            view.updateTaskExecutionState(3, processTaskResult(TaskExecutionCancelled))
+        }
     }
 
     override fun runLongComputationTasks() {

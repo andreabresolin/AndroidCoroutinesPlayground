@@ -162,16 +162,24 @@ constructor(
         delayTask(1000)
 
         task1State.value = RUNNING
-        val task1Result: TaskExecutionResult = callbackTask1.execute("RANDOM STRING")
-        task1State.value = processTaskResult(task1Result)
+        try {
+            val task1Result: TaskExecutionResult = callbackTask1.execute("RANDOM STRING")
+            task1State.value = processTaskResult(task1Result)
+        } catch (e: CustomTaskException) {
+            task1State.value = processTaskResult(TaskExecutionError(e))
+        }
 
         task2State.value = RUNNING
         val task2Result: TaskExecutionResult = callbackTask2.execute("SUCCESS")
         task2State.value = processTaskResult(task2Result)
 
         task3State.value = RUNNING
-        val task3Result: TaskExecutionResult = callbackTask3.execute("SUCCESS")
-        task3State.value = processTaskResult(task3Result)
+        try {
+            val task3Result: TaskExecutionResult = callbackTask3.execute("CANCEL")
+            task3State.value = processTaskResult(task3Result)
+        } catch (e: CancellationException) {
+            task3State.value = processTaskResult(TaskExecutionCancelled)
+        }
     }
 
     override fun runLongComputationTasks() {
