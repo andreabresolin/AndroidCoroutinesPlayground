@@ -48,7 +48,7 @@ class ParallelTaskUseCaseTest : BaseMockitoTest() {
 
     // region When
 
-    private fun whenExecuteAsyncWith(startDelay: Long, minDuration: Long, maxDuration: Long) = runBlocking {
+    private fun whenExecuteAsyncWith(startDelay: Long, minDuration: Long, maxDuration: Long) {
         actualExecuteAsyncResult = subject.executeAsync(testAppCoroutineScope, startDelay, minDuration, maxDuration)
     }
 

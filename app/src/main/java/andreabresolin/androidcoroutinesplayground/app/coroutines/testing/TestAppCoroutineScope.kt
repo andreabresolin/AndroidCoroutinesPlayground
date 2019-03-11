@@ -10,7 +10,7 @@ import kotlin.coroutines.CoroutineContext
 class TestAppCoroutineScope
 @Inject constructor() : AppCoroutineScope() {
 
-    private val job: Job = Job()
+    private val job = Job()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Unconfined + job
